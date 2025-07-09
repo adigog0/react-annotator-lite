@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { ReactSketchCanvas, type ReactSketchCanvasRef, type CanvasPath, type Point } from "react-sketch-canvas";
 import { cn } from "../../lib/tailwind";
 import RedoIcon from "../../assets/icons/redo.svg?react";
@@ -9,16 +9,22 @@ import Stroke2 from "../../assets/icons/stroke2.svg?react";
 import Stroke3 from "../../assets/icons/stroke3.svg?react";
 import Stroke4 from "../../assets/icons/stroke4.svg?react";
 import EraseIcon from "../../assets/icons/Eraser.svg?react";
-import { useDebounceFn } from "../../hooks/useDebounce";
+import { useDebounce } from "../../hooks/useDebounce";
+import Tooltip from "../tooltip/Tooltip";
+import { useAnnotatorContext } from "../../context/AnnotatorContext";
+import type { CurUserData } from "../../types/constant";
 import ColorPickerButton from "./ColorPickerButton";
 
 export type SketchActions = "Redo" | "Undo" | "Cancel" | "Done";
 export type SketchOptions = "Erase" | "Pen" | "pick color";
+export type UserCanvasPath = CanvasPath & {
+  user: CurUserData;
+};
 
 interface SketchCanvasProps {
   image_url: string;
-  canvasPath?: CanvasPath[] | null;
-  handleUpdatePath: (path: CanvasPath[]) => void;
+  canvasPath?: UserCanvasPath[] | null;
+  handleUpdatePath: (path: UserCanvasPath[]) => void;
   handleSetMainAction: () => void;
   drawingOptions?: {
     strokeColor?: string;
@@ -58,22 +64,28 @@ const SketchCanvas = ({
   const [strokeColor, setStrokeColor] = useState(drawingOptions?.strokeColor ?? "#000000");
   const [sketchOptions, setSketchOptions] = useState<SketchOptions | null>("Pen");
   const [isStrokeMenuOpen, setIsStrokeMenuOpen] = useState(false);
+  const [history, setHistory] = useState<UserCanvasPath[][]>([]);
+  const [redoStack, setRedoStack] = useState<UserCanvasPath[][]>([]);
 
   //hooks
   const canvasRef = useRef<ReactSketchCanvasRef>(null);
   const strokeMenuRef = useRef<HTMLDivElement | null>(null);
   const pointerRef = useRef<SVGSVGElement | null>(null);
-  const debouncedUpdatePath = useDebounceFn((paths: CanvasPath[]) => {
+  const debouncedUpdatePath = useDebounce((paths: UserCanvasPath[]) => {
     handleUpdatePath(paths);
   }, 1000);
+  const { currentUserData } = useAnnotatorContext();
 
   //consts
-  const defaultStrokeIcons: Record<number, React.ReactNode> = {
-    2: <Stroke1 className="size-6 cursor-pointer fill-gray-500" />,
-    5: <Stroke2 className="size-6 cursor-pointer fill-gray-500" />,
-    10: <Stroke3 className="size-6 cursor-pointer fill-gray-500" />,
-    15: <Stroke4 className="size-6 cursor-pointer fill-gray-500" />,
-  };
+  const defaultStrokeIcons = useMemo(
+    () => ({
+      2: <Stroke1 className="size-6 cursor-pointer fill-gray-500" />,
+      5: <Stroke2 className="size-6 cursor-pointer fill-gray-500" />,
+      10: <Stroke3 className="size-6 cursor-pointer fill-gray-500" />,
+      15: <Stroke4 className="size-6 cursor-pointer fill-gray-500" />,
+    }),
+    []
+  );
 
   const sketchActions: { label: SketchActions; icon: React.ReactNode }[] = [
     // { label: "Cancel", icon: toolbarOptions?.topToolbarIcons?.Cancel ?? <CancelIcon fill="white" /> },
@@ -160,47 +172,105 @@ const SketchCanvas = ({
         handleSetMainAction();
         break;
       case "Undo":
+        console.log("in undo");
         canvasRef.current?.undo();
+        handleUndo();
         break;
       case "Redo":
         canvasRef.current?.redo();
+        handleRedo();
         break;
     }
+  }
+
+  function handleUndo() {
+    if (history.length < 2) return;
+
+    const newRedoStack = [...redoStack, history[history.length - 1]];
+    const newHistory = history.slice(0, -1);
+    const lastState = newHistory[newHistory.length - 1];
+
+    setHistory(newHistory);
+    setRedoStack(newRedoStack);
+    handleUpdatePath(lastState);
+
+    canvasRef.current?.clearCanvas();
+    canvasRef.current?.loadPaths(lastState);
+  }
+
+  function handleRedo() {
+    if (!redoStack.length) return;
+
+    const nextState = redoStack[redoStack.length - 1];
+    const newRedoStack = redoStack.slice(0, -1);
+    const newHistory = [...history, nextState];
+
+    setHistory(newHistory);
+    setRedoStack(newRedoStack);
+    handleUpdatePath(nextState);
+
+    canvasRef.current?.clearCanvas();
+    canvasRef.current?.loadPaths(nextState);
   }
 
   const exportPaths = async () => {
     if (canvasRef.current) {
       const paths = await canvasRef.current.exportPaths();
-      handleUpdatePath(paths);
+      const modifiedArr: UserCanvasPath[] = paths.map((p) => ({
+        drawMode: p.drawMode,
+        endTimestamp: p.endTimestamp,
+        paths: p.paths,
+        startTimestamp: p.startTimestamp,
+        strokeColor: p.strokeColor,
+        strokeWidth: p.strokeWidth,
+        user: currentUserData,
+      }));
+
+      handleUpdatePath(modifiedArr);
     }
-    setTimeout(() => {
-      handleSetMainAction(); // to avoid React update during render
-    }, 0);
+    handleSetMainAction();
   };
 
   // If the stroke is long enough, it checks for path intersections and deletes intersected paths.
-  const handleStrokeEnd = (() => {
-    let timeout: ReturnType<typeof setTimeout> | null = null;
-    return async (newStroke: Point[]) => {
-      if (!canvasPath || !newStroke?.length) return;
+  // const handleStrokeEnd = (() => {
+  //   let timeout: ReturnType<typeof setTimeout> | null = null;
+  //   return async (newStroke: Point[]) => {
+  //     if (!canvasPath || !newStroke?.length) return;
 
-      const length = getStrokeLength(newStroke);
-      if (length < 10) return;
+  //     const length = getStrokeLength(newStroke);
+  //     if (length < 10) return;
 
-      if (timeout) clearTimeout(timeout);
-      timeout = setTimeout(async () => {
-        const updatedPaths = canvasPath.filter((existingPath) => !isPathIntersecting(existingPath.paths, newStroke));
+  //     if (timeout) clearTimeout(timeout);
+  //     timeout = setTimeout(async () => {
+  //       const updatedPaths = canvasPath.filter((existingPath) => !isPathIntersecting(existingPath.paths, newStroke));
 
-        if (updatedPaths.length !== canvasPath.length) {
-          handleUpdatePath(updatedPaths);
-          if (canvasRef.current) {
-            await canvasRef.current.clearCanvas();
-            await canvasRef.current.loadPaths(updatedPaths);
-          }
-        }
-      }, 500);
-    };
-  })();
+  //       if (updatedPaths.length !== canvasPath.length) {
+  //         handleUpdatePath(updatedPaths);
+  //         if (canvasRef.current) {
+  //           await canvasRef.current.clearCanvas();
+  //           await canvasRef.current.loadPaths(updatedPaths);
+  //         }
+  //       }
+  //     }, 700);
+  //   };
+  // })();
+
+  const handleStrokeEnd = async (newStroke: Point[]) => {
+    if (!canvasPath || !newStroke?.length) return;
+
+    const length = getStrokeLength(newStroke);
+    if (length < 10) return;
+
+    const updatedPaths = canvasPath.filter((existingPath) => !isPathIntersecting(existingPath.paths, newStroke));
+
+    if (updatedPaths.length !== canvasPath.length) {
+      handleUpdatePath(updatedPaths);
+      if (canvasRef.current) {
+        await canvasRef.current.clearCanvas();
+        await canvasRef.current.loadPaths(updatedPaths);
+      }
+    }
+  };
 
   //Called on a pointer click. It checks if the click is near any path and deletes those.
   const handlePathPointerUp = (e: PointerEvent) => {
@@ -237,7 +307,18 @@ const SketchCanvas = ({
       setIsDrawing(false);
       if (canvasRef.current && sketchOptions !== "Erase") {
         const paths = await canvasRef.current.exportPaths();
-        debouncedUpdatePath(paths);
+        const modifiedArr: UserCanvasPath[] = paths.map((p) => ({
+          drawMode: p.drawMode,
+          endTimestamp: p.endTimestamp,
+          paths: p.paths,
+          startTimestamp: p.startTimestamp,
+          strokeColor: p.strokeColor,
+          strokeWidth: p.strokeWidth,
+          user: currentUserData,
+        }));
+        setHistory((prev) => [...prev, modifiedArr]);
+        setRedoStack([]); // clear redo stack
+        debouncedUpdatePath(modifiedArr);
       }
       onDrawEnd?.();
     };
@@ -254,7 +335,6 @@ const SketchCanvas = ({
       const paths = svg.querySelectorAll("path");
       paths.forEach((path) => {
         path.removeEventListener("pointerup", handlePathPointerUp); // ensure no duplicates
-        path.addEventListener("pointerup", handlePathPointerUp);
       });
     };
 
@@ -320,6 +400,7 @@ const SketchCanvas = ({
     };
   }, [isStrokeMenuOpen]);
 
+  console.log(canvasPath)
   return (
     <>
       <ReactSketchCanvas
@@ -333,7 +414,6 @@ const SketchCanvas = ({
         width="100%"
         height="100%"
         allowOnlyPointerType={inDrawMode ? "all" : "Pen"}
-        preserveBackgroundImageAspectRatio="xMidyMid"
         ref={canvasRef}
         backgroundImage={image_url}
         strokeColor={strokeColor}
@@ -357,29 +437,31 @@ const SketchCanvas = ({
           <ColorPickerButton onChange={(val) => handleDrawOptions("pick color", val)} strokeColor={strokeColor} />
 
           {/* Eraser */}
-          <button
-            onClick={() => handleDrawOptions("Erase")}
-            className={cn(
-              "p-1 rounded-xl border border-transparent hover:border-gray-400",
-              sketchOptions === "Erase" ? "bg-blue-300" : "bg-gray-700"
-            )}
-          >
-            {toolbarOptions?.strokeIcons?.eraserIcon ?? (
-              <EraseIcon className="cursor-pointer fill-amber-50 hover:fill-gray-800" />
-            )}
-          </button>
+          <Tooltip title="Eraser">
+            <button
+              onClick={() => handleDrawOptions("Erase")}
+              className={cn(
+                "p-1 rounded-xl border border-transparent hover:border-gray-400",
+                sketchOptions === "Erase" ? "bg-blue-300" : "bg-gray-700"
+              )}
+            >
+              {toolbarOptions?.strokeIcons?.eraserIcon ?? <EraseIcon className="cursor-pointer fill-amber-50" />}
+            </button>
+          </Tooltip>
 
           {/* Stroke Width Dropdown */}
           <div className="relative group" ref={strokeMenuRef}>
-            <button
-              className={cn(
-                "p-1 rounded-xl bg-gray-700 hover:border-gray-400 cursor-pointer",
-                sketchOptions === "Pen" ? "bg-blue-300" : "bg-gray-700"
-              )}
-              onClick={() => setIsStrokeMenuOpen((prev) => !prev)}
-            >
-              ✏️
-            </button>
+            <Tooltip title="Stroke width">
+              <button
+                className={cn(
+                  "p-1 rounded-xl bg-gray-700 hover:border-gray-400 cursor-pointer",
+                  sketchOptions === "Pen" ? "bg-blue-300" : "bg-gray-700"
+                )}
+                onClick={() => setIsStrokeMenuOpen((prev) => !prev)}
+              >
+                ✏️
+              </button>
+            </Tooltip>
             {isStrokeMenuOpen && (
               <div className="absolute top-full bg-gray-100 mt-1 left-1/2 -translate-x-1/2 border rounded-md shadow-md p-1 z-50 cursor-pointer">
                 {Object.entries(toolbarOptions?.strokeIcons?.strokeWidthIcons ?? defaultStrokeIcons).map(
@@ -405,13 +487,15 @@ const SketchCanvas = ({
 
           {/* Other Drawing Actions */}
           {sketchActions.map(({ label, icon }) => (
-            <button
-              key={label}
-              onClick={() => handleSelectedAction(label)}
-              className="p-1 rounded-xl bg-gray-700 border border-transparent hover:border-gray-400 cursor-pointer"
-            >
-              {icon}
-            </button>
+            <Tooltip key={label} title={label}>
+              <button
+                key={label}
+                onClick={() => handleSelectedAction(label)}
+                className="p-1 rounded-xl bg-gray-700 border border-transparent hover:border-gray-400 cursor-pointer"
+              >
+                {icon}
+              </button>
+            </Tooltip>
           ))}
         </div>
       )}

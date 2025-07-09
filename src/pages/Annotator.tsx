@@ -5,7 +5,7 @@ import type { ActionTypes, AnnotatorProps, MetaData } from "../types/constant";
 import { useResponsiveCanvasSize } from "../hooks/useResponsiveCanvasSize";
 import { cn } from "../lib/tailwind";
 import { AnnotatorContext } from "../context/AnnotatorContext";
-import SketchCanvas from "../components/drawingComponents/SketchCanvas";
+import SketchCanvas, { UserCanvasPath } from "../components/drawingComponents/SketchCanvas";
 import PathOverlay from "../components/drawingComponents/PathOverlay";
 import ActionBar from "../components/actionBar/ActionBar";
 import MetaDataSideBar from "../components/commentComponents/MetaDataSideBar";
@@ -31,18 +31,19 @@ const Annotator = ({
   actionToolbarStyle,
   sketchCanvasStyle,
   imageContainerStyle,
-  currentUserId,
+  currentUserData,
   onSave,
   onDelete,
   maxWidth,
   maxHeight,
   commentItems,
   disableAnnotationDragging,
+  renderPathTooltip
 }: AnnotatorProps) => {
   //states
   const [metaData, setMetaData] = useState<MetaData[]>(initial_Annotations);
   const [selectedAction, setSelectedAction] = useState<ActionTypes | null>(null);
-  const [canvasPaths, setCanvasPaths] = useState<CanvasPath[]>(initial_Paths);
+  const [canvasPaths, setCanvasPaths] = useState<UserCanvasPath[]>(initial_Paths);
   const [curSelectedMetaDataId, setCurSelectedMetaDataId] = useState<string | null>(null);
   const [offsetValue, setOffsetValue] = useState<{ x: number; y: number; value: string } | null>(null);
   const [openBottomMenu, setOpenBottomMenu] = useState(false);
@@ -52,7 +53,7 @@ const Annotator = ({
   const screenSize = useScreenSize();
   const MAX_WIDTH = maxWidth ?? defaultWidth;
   const MAX_HEIGHT = maxHeight ?? defaultHeight;
-
+ 
   //hooks
   const { width, height } = useResponsiveCanvasSize(image_url, MAX_WIDTH, MAX_HEIGHT);
   const imageContainerRef = useRef<HTMLDivElement>(null);
@@ -86,7 +87,7 @@ const Annotator = ({
           offsetx: offsetValue.x,
           offsety: offsetValue.y,
           created_at: new Date(),
-          created_by: currentUserId || "Unknown",
+          created_by: currentUserData.userName || "Unknown",
         };
       } else {
         const curParentObj = metaData.find((v) => v.metadata_id === curSelectedMetaDataId);
@@ -98,7 +99,7 @@ const Annotator = ({
           offsetx: curParentObj.offsetx,
           offsety: curParentObj.offsety,
           created_at: new Date(),
-          created_by: currentUserId || "Unknown",
+          created_by: currentUserData.userName || "Unknown",
         };
       }
       if (tmpObj) {
@@ -108,7 +109,7 @@ const Annotator = ({
         else if (type === "sub") onReplyAdd?.(tmpObj, curSelectedMetaDataId!);
       }
     },
-    [offsetValue, curSelectedMetaDataId, metaData, currentUserId]
+    [offsetValue, curSelectedMetaDataId, metaData, currentUserData]
   );
 
   function handleClickMetaData(e: React.MouseEvent<HTMLDivElement>, id: string) {
@@ -245,7 +246,7 @@ const Annotator = ({
     });
   }
 
-  const handleUpdatePath = useCallback((path: CanvasPath[]) => {
+  const handleUpdatePath = useCallback((path: UserCanvasPath[]) => {
     setCanvasPaths(path);
   }, []);
 
@@ -263,10 +264,11 @@ const Annotator = ({
       canvasPaths,
       setCanvasPaths,
       handleDeleteMetaData,
-      currentUserId,
       commentPillStyle,
       commentHoverMenuStyle,
       enableDrawing,
+      currentUserData,
+      renderPathTooltip
     }),
     [metaData, curSelectedMetaDataId, selectedAction, canvasPaths]
   );
