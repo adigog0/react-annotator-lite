@@ -266,8 +266,8 @@ const SketchCanvas = ({
     if (updatedPaths.length !== canvasPath.length) {
       handleUpdatePath(updatedPaths);
       if (canvasRef.current) {
-        await canvasRef.current.clearCanvas();
-        await canvasRef.current.loadPaths(updatedPaths);
+        canvasRef.current.clearCanvas();
+        canvasRef.current.loadPaths(updatedPaths);
       }
     }
   };

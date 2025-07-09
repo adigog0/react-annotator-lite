@@ -319,7 +319,7 @@ const Annotator = ({
               inDrawMode={selectedAction === "Draw" && enableDrawing}
             />
 
-            {selectedAction !== "Draw" && enableDrawing && canvasPaths.length > 0 && (
+            {selectedAction !== "Draw" && enableDrawing && canvasPaths?.length > 0 && (
               <PathOverlay
                 paths={canvasPaths}
                 canvasWidth={width}
@@ -329,7 +329,7 @@ const Annotator = ({
               />
             )}
 
-            {metaData.length > 0 && (
+            {metaData?.length > 0 && (
               <MetaDataLayer
                 handleClickMetaData={handleClickMetaData}
                 commentItems={commentItems}
