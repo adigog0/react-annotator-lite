@@ -33,6 +33,9 @@ yarn add react-annotator-lite
 import React, { useState } from "react";
 import Annotator from "react-annotator-lite";
 
+//add the following line to include default styles
+import 'react-annotator-lite/dist/index.css'
+
 const App = () => {
   const [annotations, setAnnotations] = useState([]);
   const [paths, setPaths] = useState([]);
