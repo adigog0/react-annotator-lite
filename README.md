@@ -53,6 +53,14 @@ const App = () => {
     // Delete logic
   };
 
+  // Example: Custom tooltip for drawing paths
+  const renderPathTooltip = (path, index) => (
+    <div style={{ background: '#222', color: '#fff', padding: 4, borderRadius: 4 }}>
+      <strong>Drawn by:</strong> {path.user?.userName || 'Unknown'}<br />
+      <strong>Path #{index + 1}</strong>
+    </div>
+  );
+
   return (
     <div style={{ maxWidth: 800, margin: "0 auto" }}>
       <Annotator
@@ -64,9 +72,11 @@ const App = () => {
         onSave={handleSave}
         onDelete={handleDelete}
         enableDrawing={true}
-        currentUserId="user-123"
+        currentUserData={{ userId: "user-123", userName: "Alice" }}
         maxWidth={800}
         maxHeight={600}
+        drawingOptions={{ strokeColor: '#00f', strokeWidth: 8 }}
+        renderPathTooltip={renderPathTooltip}
       />
     </div>
   );
@@ -85,26 +95,27 @@ export default App;
 |-----------------------------|-------------------------------------------|------------------------------------------------------------------|--------------------|
 | `image_url`                 | `string`                                  | URL of the image to annotate (**required**)                       | —                  |
 | `initial_Annotations`       | `MetaData[]`                              | Initial comment annotations                                      | `[]`               |
-| `initial_Paths`             | `CanvasPath[]`                            | Initial drawing paths                                            | `[]`               |
+| `initial_Paths`             | `UserCanvasPath[]`                        | Initial drawing paths                                            | `[]`               |
 | `onCommentAdd`              | `(comment: MetaData) => void`             | Callback when a new comment is added                             | —                  |
 | `onReplyAdd`                | `(reply: MetaData, parentId: string) => void` | Callback when a reply to a comment is added                  | —                  |
-| `onSave`                    | `(metaData: MetaData[], paths: CanvasPath[]) => void` | Callback when save action is triggered           | —                  |
+| `onSave`                    | `(metaData: MetaData[], paths: UserCanvasPath[]) => void` | Callback when save action is triggered           | —                  |
 | `onDelete`                  | `(metadataId: string) => void`            | Callback when a comment or reply is deleted                      | —                  |
 | `enableDrawing`             | `boolean`                                 | Enable or disable drawing mode                                   | `true`             |
-| `currentUserId`             | `string`                                  | ID of the current user for created comments                      | `"Unknown"`        |
+| `currentUserData`           | `{ userId: string; userName?: string }`   | Current user info for created comments                           | `{ userId: 'Unknown' }` |
 | `maxWidth`                  | `number`                                  | Max width of image container                                     | Responsive default |
 | `maxHeight`                 | `number`                                  | Max height of image container                                    | Responsive default |
 | `commentPillStyle`          | `React.CSSProperties`                     | Custom style for comment pills                                   | —                  |
 | `commentHoverMenuStyle`     | `React.CSSProperties`                     | Style for comment hover menu                                     | —                  |
 | `commentSidebarStyle`       | `React.CSSProperties`                     | Style for the comment sidebar                                    | —                  |
 | `commentOptionMenuStyle`    | `React.CSSProperties`                     | Style for comment option menus                                   | —                  |
-| `actionIcons`               | `Record<string, React.ReactNode>`          | Custom action icons for toolbar                                  | —                  |
+| `actionIcons`               | `Record<string, React.ReactNode>`         | Custom action icons for toolbar                                  | —                  |
 | `actionToolbarStyle`        | `React.CSSProperties`                     | Style for the action toolbar                                     | —                  |
 | `sketchCanvasStyle`         | `React.CSSProperties`                     | Style for the drawing canvas                                     | —                  |
 | `imageContainerStyle`       | `React.CSSProperties`                     | Style for the image container wrapper                            | —                  |
-| `commentItems`              | `MetaData[]`                              | Comments data to display                                         | —                  |
+| `commentItems`              | `React.ReactNode`                         | Custom comment item renderer                                     | —                  |
 | `disableAnnotationDragging` | `boolean`                                 | Disable dragging of comment annotations                          | `false`            |
 | `drawingOptions`            | `{ strokeColor?: string; strokeWidth?: number; }` | Drawing tool options (color, width)                  | —                  |
+| `renderPathTooltip`         | `(path: UserCanvasPath, index: number) => React.ReactNode` | Custom tooltip renderer for drawing paths         | —                  |
 
 #### Callback Details
 
@@ -112,10 +123,34 @@ export default App;
   Called when a new comment is added. Receives the comment object.
 - **onReplyAdd(reply: MetaData, parentId: string):**
   Called when a reply is added to a comment. Receives the reply and parent comment ID.
-- **onSave(metaData: MetaData[], paths: CanvasPath[]):**
+- **onSave(metaData: MetaData[], paths: UserCanvasPath[]):**
   Called when the user triggers a save action. Receives all metadata and drawing paths.
 - **onDelete(metadataId: string):**
   Called when a comment or reply is deleted. Receives the metadata ID.
+
+---
+
+## 🧩 Custom Drawing Path Tooltip (`renderPathTooltip`)
+
+You can provide a custom tooltip for each drawing path using the `renderPathTooltip` prop. This function receives the path object and its index, and should return a React node to display as a tooltip when hovering over a path.
+
+**Example:**
+
+```jsx
+const renderPathTooltip = (path, index) => (
+  <div style={{ background: '#333', color: '#fff', padding: 6, borderRadius: 4 }}>
+    <div>Drawn by: <b>{path.user?.userName || 'Unknown'}</b></div>
+    <div>Path #{index + 1}</div>
+    <div>Points: {path.paths.length}</div>
+  </div>
+);
+
+<Annotator
+  image_url="..."
+  // ...other props
+  renderPathTooltip={renderPathTooltip}
+/>
+```
 
 ---
 
