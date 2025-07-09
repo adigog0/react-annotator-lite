@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 import type { CanvasPath } from "react-sketch-canvas";
-import type { ActionTypes, MetaData } from "../types/constant";
+import type { ActionTypes, CurUserData, MetaData } from "../types/constant";
+import { UserCanvasPath } from "../components/drawingComponents/SketchCanvas";
 
 export interface AnnotatorContextType {
   metaData: MetaData[];
@@ -18,14 +19,15 @@ export interface AnnotatorContextType {
   hideAllMetadata: () => void;
   showAllMetadata: () => void;
 
-  canvasPaths: CanvasPath[];
-  setCanvasPaths: (paths: CanvasPath[]) => void;
+  canvasPaths: UserCanvasPath[];
+  setCanvasPaths: (paths: UserCanvasPath[]) => void;
 
-  currentUserId: string;
+  currentUserData: CurUserData;
 
   commentPillStyle?: React.CSSProperties;
   commentHoverMenuStyle?: React.CSSProperties;
   enableDrawing: boolean;
+  renderPathTooltip?: (index: number, user: CurUserData) => React.ReactNode;
 }
 
 export const AnnotatorContext = createContext<AnnotatorContextType | null>(null);

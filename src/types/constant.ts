@@ -1,4 +1,5 @@
 import { type CanvasPath } from "react-sketch-canvas";
+import { UserCanvasPath } from "../components/drawingComponents/SketchCanvas";
 
 export type ActionTypes =
   | "Add comment"
@@ -20,6 +21,11 @@ export interface MetaData {
   updated_at?: Date | string;
 }
 
+export interface CurUserData {
+  userId: string;
+  userName: string;
+  [key: string]: any;
+}
 export interface AnnotatorProps {
   image_url: string;
   image_alt: string;
@@ -42,7 +48,7 @@ export interface AnnotatorProps {
 
   // Drawing
   enableDrawing?: boolean;
-  initial_Paths?: CanvasPath[];
+  initial_Paths?: UserCanvasPath[];
   onPathsChange?: (paths: CanvasPath[]) => void;
   drawingOptions?: {
     /** Stroke color in Hex format */
@@ -50,8 +56,9 @@ export interface AnnotatorProps {
     strokeWidth?: number;
   };
   sketchCanvasStyle?: React.CSSProperties;
-  currentUserId: string;
-  onSave?: (annotations: MetaData[], paths?: CanvasPath[]) => void;
+  currentUserData: CurUserData;
+  onSave?: (annotations?: MetaData[], paths?: CanvasPath[]) => void;
+  renderPathTooltip?: (index: number, user: CurUserData) => React.ReactNode;
 
   imageContainerStyle?: React.CSSProperties;
   maxWidth?: number;

@@ -1,8 +1,11 @@
 import { useState } from "react";
 import type { CanvasPath } from "react-sketch-canvas";
+import { useAnnotatorContext } from "../../context/AnnotatorContext";
+import { CurUserData } from "../../types/constant";
+import { UserCanvasPath } from "./SketchCanvas";
 
 interface PathOverlayProps {
-  paths: CanvasPath[];
+  paths: UserCanvasPath[];
   canvasWidth: number;
   canvasHeight: number;
   denormalize: (point: { x: number; y: number }) => { x: number; y: number };
@@ -10,7 +13,6 @@ interface PathOverlayProps {
   tooltipStyle?: React.CSSProperties;
   pathClassName?: string | ((path: CanvasPath, index: number, isHovered: boolean) => string);
   onPathClick?: (path: CanvasPath, index: number, event: React.MouseEvent<SVGPathElement>) => void;
-  renderTooltip?: (index: number) => React.ReactNode;
 }
 
 const PathOverlay = ({
@@ -22,11 +24,16 @@ const PathOverlay = ({
   tooltipStyle,
   pathClassName,
   onPathClick,
-  renderTooltip,
 }: PathOverlayProps) => {
   //states
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<{
+    index: number;
+    user: CurUserData;
+  } | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
+
+  //hooks
+  const { renderPathTooltip } = useAnnotatorContext();
 
   //methods
   const getPathD = (points: { x: number; y: number }[]) =>
@@ -44,7 +51,7 @@ const PathOverlay = ({
           paths?.map((path, index) => {
             const denormPoints = path.paths.map(denormalize);
             const d = getPathD(denormPoints);
-            const isHovered = hoveredIndex === index;
+            const isHovered = hoveredIndex?.index === index;
 
             const defaultStroke = isHovered ? "red" : path.strokeColor || "black";
             const defaultWidth = path.strokeWidth || 2;
@@ -67,7 +74,10 @@ const PathOverlay = ({
                     if (box) {
                       setTooltipPos({ x: e.clientX - box.left, y: e.clientY - box.top });
                     }
-                    setHoveredIndex(index);
+                    setHoveredIndex({
+                      index: index,
+                      user: path.user,
+                    });
                   }}
                   onMouseMove={(e) => {
                     const box = e.currentTarget.ownerSVGElement?.getBoundingClientRect();
@@ -84,7 +94,10 @@ const PathOverlay = ({
                     const box = e.currentTarget.ownerSVGElement?.getBoundingClientRect();
                     if (box) {
                       setTooltipPos({ x: e.clientX - box.left, y: e.clientY - box.top });
-                      setHoveredIndex(index);
+                      setHoveredIndex({
+                        index: index,
+                        user: path.user,
+                      });
                     }
                     onPathClick?.(path, index, e);
                   }}
@@ -104,7 +117,9 @@ const PathOverlay = ({
             transform: "translate(5px, 5px)",
           }}
         >
-          {renderTooltip ? renderTooltip(hoveredIndex) : `Path #${hoveredIndex + 1}`}
+          {renderPathTooltip
+            ? renderPathTooltip(hoveredIndex.index, hoveredIndex.user)
+            : `${hoveredIndex.user.userName}`}
         </div>
       )}
     </div>
