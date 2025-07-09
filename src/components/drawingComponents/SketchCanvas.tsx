@@ -9,7 +9,7 @@ import Stroke2 from "../../assets/icons/stroke2.svg?react";
 import Stroke3 from "../../assets/icons/stroke3.svg?react";
 import Stroke4 from "../../assets/icons/stroke4.svg?react";
 import EraseIcon from "../../assets/icons/Eraser.svg?react";
-import { useDebounce } from "../../hooks/useDebounce";
+import { useDebounce, useDebounceFn } from "../../hooks/useDebounce";
 import Tooltip from "../tooltip/Tooltip";
 import { useAnnotatorContext } from "../../context/AnnotatorContext";
 import type { CurUserData } from "../../types/constant";
@@ -71,7 +71,7 @@ const SketchCanvas = ({
   const canvasRef = useRef<ReactSketchCanvasRef>(null);
   const strokeMenuRef = useRef<HTMLDivElement | null>(null);
   const pointerRef = useRef<SVGSVGElement | null>(null);
-  const debouncedUpdatePath = useDebounce((paths: UserCanvasPath[]) => {
+  const debouncedUpdatePath = useDebounceFn((paths: UserCanvasPath[]) => {
     handleUpdatePath(paths);
   }, 1000);
   const { currentUserData } = useAnnotatorContext();
