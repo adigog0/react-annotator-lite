@@ -16,7 +16,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/adigog0/annotator-lite.git"
+    "url": "git+https://github.com/adigog0/react-annotator-lite.git"
   },
   "files": [
     "dist"
