@@ -276,7 +276,7 @@ const Annotator = ({
 
   return (
     <AnnotatorContext.Provider value={contextValue}>
-      <div className={cn("h-dvh flex flex-row relative  bg-[rgba(0,0,0,0.8)] w-full", mainContainerStyle)}>
+      <div className="h-dvh flex flex-row relative  bg-[rgba(0,0,0,0.7)] w-full" style={mainContainerStyle}>
         {/* Sidebar */}
         {shouldShowSidebar() && (
           <MetaDataSideBar
