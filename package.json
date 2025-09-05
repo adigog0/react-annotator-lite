@@ -26,7 +26,8 @@
     "dev": "vite --host 0.0.0.0",
     "build": "rm -rf dist && mkdir -p dist/types && node build.cjs && tsc --emitDeclarationOnly --declaration --outDir dist/types",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
     "react": "^19.1.0",
