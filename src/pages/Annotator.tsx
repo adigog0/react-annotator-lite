@@ -38,7 +38,8 @@ const Annotator = ({
   maxHeight,
   commentItems,
   disableAnnotationDragging,
-  renderPathTooltip
+  renderPathTooltip,
+  mainContainerStyle,
 }: AnnotatorProps) => {
   //states
   const [metaData, setMetaData] = useState<MetaData[]>(initial_Annotations);
@@ -53,7 +54,7 @@ const Annotator = ({
   const screenSize = useScreenSize();
   const MAX_WIDTH = maxWidth ?? defaultWidth;
   const MAX_HEIGHT = maxHeight ?? defaultHeight;
- 
+
   //hooks
   const { width, height } = useResponsiveCanvasSize(image_url, MAX_WIDTH, MAX_HEIGHT);
   const imageContainerRef = useRef<HTMLDivElement>(null);
@@ -268,14 +269,14 @@ const Annotator = ({
       commentHoverMenuStyle,
       enableDrawing,
       currentUserData,
-      renderPathTooltip
+      renderPathTooltip,
     }),
     [metaData, curSelectedMetaDataId, selectedAction, canvasPaths]
   );
 
   return (
     <AnnotatorContext.Provider value={contextValue}>
-      <div className="h-dvh flex flex-row relative bg-gray-950 border-2 border-black">
+      <div className={cn("h-dvh flex flex-row relative  bg-[rgba(0,0,0,0.8)] w-full", mainContainerStyle)}>
         {/* Sidebar */}
         {shouldShowSidebar() && (
           <MetaDataSideBar

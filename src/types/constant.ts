@@ -61,6 +61,7 @@ export interface AnnotatorProps {
   renderPathTooltip?: (index: number, user: CurUserData) => React.ReactNode;
 
   imageContainerStyle?: React.CSSProperties;
+  mainContainerStyle?:React.CSSProperties;
   maxWidth?: number;
   maxHeight?: number;
 }
