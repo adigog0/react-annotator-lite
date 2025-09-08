@@ -351,7 +351,7 @@ const Annotator = ({
 
         {/* Bottom Menu */}
         {isMobile && openBottomMenu && (
-          <div className="w-full absolute bottom-0 block lg:hidden">
+          <div className="w-full absolute bottom-0">
             <BottomMetaDataMenu
               isOpen={openBottomMenu}
               handleCloseMenu={() => setOpenBottomMenu(false)}

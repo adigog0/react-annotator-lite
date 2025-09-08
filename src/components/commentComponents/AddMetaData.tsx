@@ -19,7 +19,7 @@ const AddMetaData = ({ offsetValues, handleAddMetadata }: IProps) => {
 
   return (
     <div
-      className=" absolute hidden lg:flex gap-2 -translate-y-full min-w-[15rem]"
+      className=" absolute gap-2 -translate-y-full min-w-[15rem]"
       style={offsetValues ? { top: `${offsetValues.y}%`, left: `${offsetValues.x}%` } : {}}
       onClick={(e) => e.stopPropagation()}
     >
