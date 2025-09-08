@@ -49,7 +49,7 @@ export interface AnnotatorProps {
   // Drawing
   enableDrawing?: boolean;
   initial_Paths?: UserCanvasPath[];
-  onPathsChange?: (paths: CanvasPath[]) => void;
+  // onPathsChange?: (paths: CanvasPath[]) => void;
   drawingOptions?: {
     /** Stroke color in Hex format */
     strokeColor?: string;
@@ -57,7 +57,7 @@ export interface AnnotatorProps {
   };
   sketchCanvasStyle?: React.CSSProperties;
   currentUserData: CurUserData;
-  onSave?: (annotations?: MetaData[], paths?: CanvasPath[]) => void;
+  onSave?: (annotations?: MetaData[], paths?: UserCanvasPath[]) => void;
   renderPathTooltip?: (index: number, user: CurUserData) => React.ReactNode;
 
   imageContainerStyle?: React.CSSProperties;

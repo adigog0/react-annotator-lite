@@ -231,30 +231,6 @@ const SketchCanvas = ({
     handleSetMainAction();
   };
 
-  // If the stroke is long enough, it checks for path intersections and deletes intersected paths.
-  // const handleStrokeEnd = (() => {
-  //   let timeout: ReturnType<typeof setTimeout> | null = null;
-  //   return async (newStroke: Point[]) => {
-  //     if (!canvasPath || !newStroke?.length) return;
-
-  //     const length = getStrokeLength(newStroke);
-  //     if (length < 10) return;
-
-  //     if (timeout) clearTimeout(timeout);
-  //     timeout = setTimeout(async () => {
-  //       const updatedPaths = canvasPath.filter((existingPath) => !isPathIntersecting(existingPath.paths, newStroke));
-
-  //       if (updatedPaths.length !== canvasPath.length) {
-  //         handleUpdatePath(updatedPaths);
-  //         if (canvasRef.current) {
-  //           await canvasRef.current.clearCanvas();
-  //           await canvasRef.current.loadPaths(updatedPaths);
-  //         }
-  //       }
-  //     }, 700);
-  //   };
-  // })();
-
   const handleStrokeEnd = async (newStroke: Point[]) => {
     if (!canvasPath || !newStroke?.length) return;
 
@@ -424,6 +400,7 @@ const SketchCanvas = ({
             handleStrokeEnd(path.paths);
           }
         }}
+ 
       />
 
       {inDrawMode && !isDrawing && (

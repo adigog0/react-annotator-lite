@@ -3,12 +3,13 @@ import { cn } from "../../lib/tailwind";
 import { format } from "date-fns";
 import OptionIcon from "../../assets/icons/optionsDot.svg?react";
 import CloseIcon from "../../assets/icons/close.svg?react";
-import type { MetaData } from "../../types/constant";;
+import type { MetaData } from "../../types/constant";
 import { useAnnotatorContext } from "../../context/AnnotatorContext";
 import { UserPill } from "./UserPill";
 import CommentCard from "./CommentCard";
 import MetaDataInputBox from "./MetaDataInputBox";
 import CustomMenu from "../customMenu/CustomMenu";
+import useScreenSize from "../../hooks/useScreenSize";
 
 const ParentOptions = ["Delete", "Hide Comments"];
 
@@ -24,16 +25,13 @@ const MetaDataPill = ({ metadata, isSelected, comments = [], onReply }: UserComm
   const [parentOptionMenu, setParentOptionMenu] = useState<HTMLButtonElement | null>(null);
 
   //hooks
-  const {
-    curSelectedMetaDataId,
-    hideAllMetadata,
-    handleDeleteMetaData,
-    commentHoverMenuStyle,
-    commentPillStyle,
-  } = useAnnotatorContext();
+  const { curSelectedMetaDataId, hideAllMetadata, handleDeleteMetaData, commentHoverMenuStyle, commentPillStyle } =
+    useAnnotatorContext();
 
   const menuRef = useRef<HTMLDivElement | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
+  const screenSize = useScreenSize();
+  const isMobile = screenSize !== "large";
 
   //const
   const initial = metadata.created_by?.[0]?.toUpperCase() || "U";
@@ -97,11 +95,11 @@ const MetaDataPill = ({ metadata, isSelected, comments = [], onReply }: UserComm
       </div>
 
       {/* Comment Menu */}
-      {isSelected && (
+      {isMobile && isSelected && (
         <div
           ref={menuRef}
           className={cn(
-            "bg-white p-2 rounded-md flex-col gap-2 absolute left-10 top-0 z-20 w-[20rem] shadow-lg hidden md:block"
+            "bg-white p-2 rounded-md flex-col gap-2 absolute left-10 top-0 z-20 w-[20rem] shadow-lg"
           )}
         >
           <div className="flex justify-between items-center py-1">

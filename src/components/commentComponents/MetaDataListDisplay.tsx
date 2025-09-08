@@ -7,6 +7,7 @@ import CommentCard from "./CommentCard";
 import MetaDataInputBox from "./MetaDataInputBox";
 import type { MetaData } from "../../types/constant";
 import { useAnnotatorContext } from "../../context/AnnotatorContext";
+import useScreenSize from "../../hooks/useScreenSize";
 
 const parentCommentOptions = ["Hide Comments", "Delete"] as const;
 const commentOptions = ["Delete"] as const;
@@ -27,6 +28,8 @@ const MetaDataListDisplay = ({ comments }: CommentListDisplayProps) => {
   //hooks
   const endRef = useRef<HTMLDivElement | null>(null);
   const { curSelectedMetaDataId, handleDeleteMetaData, handleAddComment } = useAnnotatorContext();
+  const screenSize = useScreenSize();
+  const isMobile = screenSize !== "large";
 
   //const
   const CommentOptionsHandlerMap: CommentHandlerMap = {
@@ -68,39 +71,8 @@ const MetaDataListDisplay = ({ comments }: CommentListDisplayProps) => {
 
   return (
     <div className="flex gap-3 relative ">
-      {/* <div
-        className={cn(
-          "bg-white p-1 rounded-t-3xl rounded-br-3xl h-fit",
-          parentData.metadata_id === curSelectedMetaDataId ? "border-2 border-blue-400" : "bg-white"
-        )}
-      >
-        <div className="bg-blue-400  text-white p-1 px-2.5 h-fit capitalize rounded-full">
-          {parentData.created_by[0]}
-        </div>
-      </div> */}
-      {/** desktop view menu */}
-      <div
-        className={cn(
-          "bg-white p-2 rounded-md  flex-col gap-2 absolute hidden lg:block",
-          curSelectedMetaDataId === parentData.metadata_id ? "z-20" : "z-10"
-        )}
-      >
-        <div className="flex justify-between items-center">
-          <span className="border-gray-500 text-xs text-gray-400">Comment</span>
-          <button
-            data-menu-type="parent"
-            // id={`parent_comment_options_${curSelectedMetaDataId}`}
-            className="ml-auto  hover:bg-gray-200 rounded-md relative"
-            onClick={handleOpenOptionMenu}
-          >
-            <OptionIcon className="ml-auto size-4 cursor-pointer" fill="gray" />
-          </button>
-          <button className=" ml-1 hover:bg-gray-200 rounded-md">
-            <CloseIcon fill="gray" className="size-4" />
-          </button>
-        </div>
-        <div className="border-b border-gray-300"></div>
-        <div className="max-h-90 overflow-auto">
+      {isMobile ? (
+        <div className="max-h-90 overflow-auto w-full">
           {comments.map((c) => (
             <CommentCard
               key={c.metadata_id}
@@ -110,24 +82,45 @@ const MetaDataListDisplay = ({ comments }: CommentListDisplayProps) => {
             />
           ))}
           <div ref={endRef}></div>
+          <MetaDataInputBox handleInputValue={handleAddSubComment} input_placeholder="Reply" initial_value="" />
         </div>
+      ) : (
+        <div
+          className={cn(
+            "bg-white p-2 rounded-md  flex-col gap-2 absolute",
+            curSelectedMetaDataId === parentData.metadata_id ? "z-20" : "z-10"
+          )}
+        >
+          <div className="flex justify-between items-center">
+            <span className="border-gray-500 text-xs text-gray-400">Comment</span>
+            <button
+              data-menu-type="parent"
+              // id={`parent_comment_options_${curSelectedMetaDataId}`}
+              className="ml-auto  hover:bg-gray-200 rounded-md relative"
+              onClick={handleOpenOptionMenu}
+            >
+              <OptionIcon className="ml-auto size-4 cursor-pointer" fill="gray" />
+            </button>
+            <button className=" ml-1 hover:bg-gray-200 rounded-md">
+              <CloseIcon fill="gray" className="size-4" />
+            </button>
+          </div>
+          <div className="border-b border-gray-300"></div>
+          <div className="max-h-90 overflow-auto">
+            {comments.map((c) => (
+              <CommentCard
+                key={c.metadata_id}
+                type="fromTag"
+                comment={c}
+                curSelectedMetaDataId={curSelectedMetaDataId ?? ""}
+              />
+            ))}
+            <div ref={endRef}></div>
+          </div>
 
-        <MetaDataInputBox handleInputValue={handleAddSubComment} input_placeholder="Reply" initial_value="" />
-      </div>
-
-      {/** mobile view  - when a comment is selected*/}
-      <div className="max-h-90 overflow-auto block lg:hidden w-full">
-        {comments.map((c) => (
-          <CommentCard
-            key={c.metadata_id}
-            type="fromTag"
-            comment={c}
-            curSelectedMetaDataId={curSelectedMetaDataId ?? ""}
-          />
-        ))}
-        <div ref={endRef}></div>
-        <MetaDataInputBox handleInputValue={handleAddSubComment} input_placeholder="Reply" initial_value="" />
-      </div>
+          <MetaDataInputBox handleInputValue={handleAddSubComment} input_placeholder="Reply" initial_value="" />
+        </div>
+      )}
 
       <CustomMenu handleClose={handleCloseOptionMenu} buttonRef={menuAnchor}>
         <div className="flex flex-col w-full">
