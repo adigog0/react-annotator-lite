@@ -54,6 +54,7 @@ const Annotator = ({
   const screenSize = useScreenSize();
   const MAX_WIDTH = maxWidth ?? defaultWidth;
   const MAX_HEIGHT = maxHeight ?? defaultHeight;
+  const isMobile = screenSize === "small" || screenSize === "medium";
 
   //hooks
   const { width, height } = useResponsiveCanvasSize(image_url, MAX_WIDTH, MAX_HEIGHT);
@@ -118,14 +119,18 @@ const Annotator = ({
     setSelectedAction(null);
     setOffsetValue(null);
     setCurSelectedMetaDataId(id);
-    setOpenBottomMenu(true);
+    if (isMobile) {
+      setOpenBottomMenu(true);
+    }
   }
 
   function handleAddAnnotation(e: React.MouseEvent<HTMLDivElement>) {
     setCurSelectedMetaDataId(null);
     if (selectedAction !== "Add comment") return;
     setOffsetValue(null);
-    setOpenBottomMenu(true);
+    if (isMobile) {
+      setOpenBottomMenu(true);
+    }
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
@@ -338,14 +343,14 @@ const Annotator = ({
               />
             )}
 
-            {selectedAction === "Add comment" && offsetValue && (
+            {!isMobile && selectedAction === "Add comment" && offsetValue && (
               <AddMetaData offsetValues={offsetValue} handleAddMetadata={handleAddComment} />
             )}
           </div>
         </div>
 
         {/* Bottom Menu */}
-        {openBottomMenu && (
+        {isMobile && openBottomMenu && (
           <div className="w-full absolute bottom-0 block lg:hidden">
             <BottomMetaDataMenu
               isOpen={openBottomMenu}
