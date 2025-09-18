@@ -233,8 +233,8 @@ const Annotator = ({
   }
 
   function handleSaveAnnotation() {
-    onSave?.(metaData, canvasPaths);
     setEditMode(false);
+    onSave?.(metaData, canvasPaths);
   }
 
   function handleSelectedAction(actionType: ActionTypes) {
@@ -324,7 +324,7 @@ const Annotator = ({
         ) : selectedAction === "Draw" ? null : (
           <div
             className={cn(
-              "absolute top-2 right-0 -translate-x-1/2 z-20 backdrop-blur-md shadow-md py-1 px-2 rounded-md text-white cursor-pointer"
+              "absolute top-5 right-5 -translate-x-1/2 z-20 backdrop-blur-md shadow-md py-1 px-2 rounded-md text-white cursor-pointer"
             )}
             style={editIconStyle}
             onClick={() => setEditMode(true)}
