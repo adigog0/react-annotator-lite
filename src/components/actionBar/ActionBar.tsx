@@ -36,27 +36,29 @@ const ActionBar: React.FC<ActionToolbarProps> = ({ handleSelectedAction, classNa
   const getIcon = (label: ActionTypes) => {
     // If user passed a custom icon, use it
     if (actionIcons[label]) return actionIcons[label];
+    
+    const iconClass = "cursor-pointer group-hover:fill-gray-800";
 
     // Else return default icon
     switch (label) {
       case "Add comment":
-        return <CommentIcon className="cursor-pointer fill-amber-50 hover:fill-gray-800" />;
+        return <CommentIcon className={iconClass} />;
       case "Nearest tags":
-        return <NearestTagIcon className="cursor-pointer fill-amber-50 hover:fill-gray-800" />;
+        return <NearestTagIcon className={iconClass}  />;
       case "Hide comments":
         return selectedAction === "Hide comments" ? (
-          <VisibilityOffIcon className="cursor-pointer fill-amber-50 hover:fill-gray-800" />
+          <VisibilityOffIcon className={iconClass}  />
         ) : (
-          <VisibilityOnIcon className="cursor-pointer fill-amber-50 hover:fill-gray-800" />
+          <VisibilityOnIcon className={iconClass}  />
         );
       case "Draw":
-        return <DrawIcon className="cursor-pointer fill-amber-50 hover:fill-gray-800" />;
+        return <DrawIcon className={iconClass}  />;
       case "Save comments":
-        return <SaveIcon className="cursor-pointer fill-amber-50 hover:fill-gray-800" />;
+        return <SaveIcon className={iconClass}  />;
       case "Hide Paths":
-        return <HidePathsIcon className="cursor-pointer fill-amber-50 hover:fill-gray-800" />;
+        return <HidePathsIcon className={iconClass}  />;
       case "All comments":
-        return <ViewAllCommentsIcon className="cursor-pointer fill-amber-50 hover:fill-gray-800" />;
+        return <ViewAllCommentsIcon className={iconClass}  />;
       default:
         return null;
     }
@@ -79,7 +81,7 @@ const ActionBar: React.FC<ActionToolbarProps> = ({ handleSelectedAction, classNa
           <button
             id={label}
             className={cn(
-              "bg-gray-700  p-1 rounded-xl hover:bg-blue-100 hover:text-gray-800",
+              "bg-gray-700 group p-1 rounded-xl hover:bg-blue-100 text-amber-50 hover:text-gray-800 cursor-pointer",
               selectedAction && selectedAction !== "Save comments" && selectedAction === label
                 ? "bg-blue-300"
                 : "bg-gray-700"

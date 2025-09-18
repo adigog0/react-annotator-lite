@@ -10,6 +10,7 @@ import CommentCard from "./CommentCard";
 import MetaDataInputBox from "./MetaDataInputBox";
 import CustomMenu from "../customMenu/CustomMenu";
 import useScreenSize from "../../hooks/useScreenSize";
+import { timeAgoFormat } from "../../utils/constants";
 
 const ParentOptions = ["Delete", "Hide Comments"];
 
@@ -86,7 +87,7 @@ const MetaDataPill = ({ metadata, isSelected, comments = [], onReply }: UserComm
             <div className="flex gap-5 justify-between">
               <span className="text-[0.8rem] font-semibold">{metadata.created_by}</span>
               <span className="text-[0.8rem] text-gray-400 break-normal">
-                {format(new Date(metadata.created_at), "dd MMMM yyyy")}
+                {timeAgoFormat(metadata.created_at)}
               </span>
             </div>
             <span className="text-[0.8rem]">{metadata.metadata_value}</span>

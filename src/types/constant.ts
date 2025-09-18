@@ -45,6 +45,7 @@ export interface AnnotatorProps {
   // Toolbar
   actionIcons?: Partial<Record<ActionTypes, React.ReactNode>>;
   actionToolbarStyle?: React.CSSProperties;
+  editIconStyle?: React.CSSProperties;
 
   // Drawing
   enableDrawing?: boolean;
@@ -61,7 +62,7 @@ export interface AnnotatorProps {
   renderPathTooltip?: (index: number, user: CurUserData) => React.ReactNode;
 
   imageContainerStyle?: React.CSSProperties;
-  mainContainerStyle?:React.CSSProperties;
+  mainContainerStyle?: React.CSSProperties;
   maxWidth?: number;
   maxHeight?: number;
 }

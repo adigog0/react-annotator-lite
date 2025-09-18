@@ -1,3 +1,4 @@
+import { formatDistanceToNow } from "date-fns";
 import { type CanvasPath } from "react-sketch-canvas";
 
 export const normalizePaths = (paths: CanvasPath[], width: number, height: number): CanvasPath[] => {
@@ -50,4 +51,8 @@ export function isPathIntersecting(pathA: CanvasPath, pathB: CanvasPath): boolea
 export function calculateDistance(x1: number, y1: number, x2: number, y2: number) {
   const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
   return distance;
+}
+
+export function timeAgoFormat(dateInput:Date | string) {
+  return formatDistanceToNow(new Date(dateInput), { addSuffix: true });
 }

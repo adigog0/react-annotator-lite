@@ -4,7 +4,6 @@ import { memo, useMemo } from "react";
 import { useAnnotatorContext } from "../../context/AnnotatorContext";
 import UserCommentPill from "./UserCommentPill";
 
-
 interface IProps {
   handleClickMetaData: (e: React.MouseEvent<HTMLDivElement, MouseEvent>, id: string) => void;
   commentItems?: React.ReactNode;
@@ -20,7 +19,17 @@ const MetaDataLayer = ({ handleClickMetaData, commentItems, disableDrag = false 
   }, [metaData, curSelectedMetaDataId]);
 
   //methods
+
+  const handleOnDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    e.dataTransfer.setData("text/plain", e.currentTarget.id.split("_")[2]);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.dropEffect = "move";
+    e.currentTarget.style.cursor = "grabbing";
+  };
+
   const handleOnDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+     e.currentTarget.style.cursor = "grab";
     const currentImage = document.getElementById("current_image");
     const draggedId = e.currentTarget.id.split("_")[2];
     const idx = metaData.findIndex((v) => v.metadata_id === draggedId);
@@ -64,16 +73,8 @@ const MetaDataLayer = ({ handleClickMetaData, commentItems, disableDrag = false 
               className={cn("absolute group flex -translate-y-full", isSelected ? "z-20" : "z-10")}
               onClick={(e) => handleClickMetaData(e, v.metadata_id)}
               draggable={!disableDrag}
-              onDragStart={
-                disableDrag
-                  ? undefined
-                  : (e) => {
-                      e.stopPropagation();
-                      e.dataTransfer.setData("text/plain", v.metadata_id);
-                      e.dataTransfer.effectAllowed = "move";
-                    }
-              }
-              onDragEnd={disableDrag ? undefined : handleOnDragEnd}
+              onDragStart={!disableDrag ? handleOnDragStart : undefined}
+              onDragEnd={!disableDrag ? handleOnDragEnd : undefined}
             >
               {commentItems ? (
                 commentItems

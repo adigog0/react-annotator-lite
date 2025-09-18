@@ -14,6 +14,8 @@ import MetaDataLayer from "../components/commentComponents/MetaDataLayer";
 import AddMetaData from "../components/commentComponents/AddMetaData";
 import { calculateDistance, getResponsiveDefaults } from "../utils/constants";
 import useScreenSize from "../hooks/useScreenSize";
+import Tooltip from "../components/tooltip/Tooltip";
+import EditAnnotationIcon from "../assets/icons/Edit_Annotation.svg?react";
 
 const Annotator = ({
   image_url,
@@ -40,6 +42,7 @@ const Annotator = ({
   disableAnnotationDragging,
   renderPathTooltip,
   mainContainerStyle,
+  editIconStyle,
 }: AnnotatorProps) => {
   //states
   const [metaData, setMetaData] = useState<MetaData[]>(initial_Annotations);
@@ -48,6 +51,9 @@ const Annotator = ({
   const [curSelectedMetaDataId, setCurSelectedMetaDataId] = useState<string | null>(null);
   const [offsetValue, setOffsetValue] = useState<{ x: number; y: number; value: string } | null>(null);
   const [openBottomMenu, setOpenBottomMenu] = useState(false);
+  const [editMode, setEditMode] = useState(
+    initial_Annotations.length !== 0 && initial_Paths.length !== 0 ? false : true
+  );
 
   //const
   const { maxWidth: defaultWidth, maxHeight: defaultHeight } = getResponsiveDefaults();
@@ -125,6 +131,7 @@ const Annotator = ({
   }
 
   function handleAddAnnotation(e: React.MouseEvent<HTMLDivElement>) {
+    if (!editMode) return;
     setCurSelectedMetaDataId(null);
     if (selectedAction !== "Add comment") return;
     setOffsetValue(null);
@@ -225,6 +232,11 @@ const Annotator = ({
     handleHideAllMetadata();
   }
 
+  function handleSaveAnnotation() {
+    onSave?.(metaData, canvasPaths);
+    setEditMode(false);
+  }
+
   function handleSelectedAction(actionType: ActionTypes) {
     setSelectedAction((prev) => {
       const isSameAction = prev === actionType;
@@ -242,7 +254,7 @@ const Annotator = ({
           isSameAction ? showAllMetadata() : handleNearestTag();
           break;
         case "Save comments":
-          onSave?.(metaData, canvasPaths);
+          handleSaveAnnotation();
           break;
         default:
           break;
@@ -250,6 +262,11 @@ const Annotator = ({
 
       return isSameAction ? null : actionType;
     });
+  }
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
   }
 
   const handleUpdatePath = useCallback((path: UserCanvasPath[]) => {
@@ -294,6 +311,29 @@ const Annotator = ({
         )}
 
         {/* Toolbar */}
+        {editMode && selectedAction !== "Draw" ? (
+          <div
+            ref={actionRef}
+            className={cn(
+              "absolute top-2 md:top-5 left-1/2 -translate-x-1/2 z-20 backdrop-blur-md shadow-md py-1 px-2 rounded-md"
+            )}
+            style={actionToolbarStyle}
+          >
+            <ActionBar handleSelectedAction={handleSelectedAction} actionIcons={actionIcons} />
+          </div>
+        ) : selectedAction === "Draw" ? null : (
+          <div
+            className={cn(
+              "absolute top-2 right-0 -translate-x-1/2 z-20 backdrop-blur-md shadow-md py-1 px-2 rounded-md text-white cursor-pointer"
+            )}
+            style={editIconStyle}
+            onClick={() => setEditMode(true)}
+          >
+            <Tooltip title="Edit Annotation" position="left">
+              <EditAnnotationIcon />
+            </Tooltip>
+          </div>
+        )}
         {selectedAction !== "Draw" && (
           <div
             ref={actionRef}
@@ -314,6 +354,7 @@ const Annotator = ({
             style={{ ...imageContainerStyle, width, height, maxWidth, maxHeight }}
             className={cn("relative flex justify-center items-center border border-white")}
             onMouseMove={(e) => handleGetNearestElems(e)}
+            onDragOver={handleDragOver}
           >
             <SketchCanvas
               image_url={image_url}
