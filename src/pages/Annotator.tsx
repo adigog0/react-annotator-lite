@@ -334,17 +334,6 @@ const Annotator = ({
             </Tooltip>
           </div>
         )}
-        {selectedAction !== "Draw" && (
-          <div
-            ref={actionRef}
-            className={cn(
-              "absolute top-2 md:top-5 left-1/2 -translate-x-1/2 z-20 backdrop-blur-md shadow-md py-1 px-2 rounded-md"
-            )}
-            style={actionToolbarStyle}
-          >
-            <ActionBar handleSelectedAction={handleSelectedAction} actionIcons={actionIcons} />
-          </div>
-        )}
 
         {/* Image Container */}
         <div className="flex flex-1 flex-col justify-center items-center">
