@@ -76,6 +76,11 @@ const Annotator = ({
   }, [curSelectedMetaDataId, metaData]);
 
   const shouldShowSidebar = () => {
+    // if actionIcons is defined and doesn't include "All comments", sidebar should never show
+    if (actionIcons && !("All comments" in actionIcons)) {
+      return false;
+    }
+
     if (screenSize === "small" || screenSize === "medium") {
       return selectedAction === "All comments";
     } else {
@@ -173,7 +178,6 @@ const Annotator = ({
   }
 
   function handleDeleteMetaData(metadata_id: string) {
-
     // Find the comment being deleted
     const deletedComment = metaData.find((c) => c.metadata_id === metadata_id);
     if (!deletedComment) return;
