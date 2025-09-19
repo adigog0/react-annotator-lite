@@ -52,7 +52,6 @@ const CustomMenu = ({ buttonRef, handleClose, children }: CustomMenuProps) => {
         menuContainerRef.current &&
         !menuContainerRef.current.contains(e.target as Node)
       ) {
-        console.log("clicked outside")
         handleClose();
       }
     };

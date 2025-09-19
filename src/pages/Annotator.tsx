@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useCallback } from "react";
+import React, { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { v4 as uuid } from "uuid";
 import type { CanvasPath } from "react-sketch-canvas";
 import type { ActionTypes, AnnotatorProps, MetaData } from "../types/constant";
@@ -67,6 +67,7 @@ const Annotator = ({
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const sideBarRef = useRef<HTMLDivElement>(null);
   const actionRef = useRef<HTMLDivElement>(null);
+  const saveTriggeredRef = useRef(false);
 
   //consts
   const subComments = useMemo(() => {
@@ -172,7 +173,6 @@ const Annotator = ({
   }
 
   function handleDeleteMetaData(metadata_id: string) {
-    console.log("metadata id", metadata_id);
 
     // Find the comment being deleted
     const deletedComment = metaData.find((c) => c.metadata_id === metadata_id);
@@ -181,7 +181,6 @@ const Annotator = ({
     // Filter out the deleted comment and any of its subcomments if it's a parent
     const modifiedArr = metaData.filter((c) => c.metadata_id !== metadata_id && c.parent_id !== metadata_id);
 
-    console.log("modified", modifiedArr);
     setMetaData(modifiedArr);
     onDelete(metadata_id);
 
@@ -233,8 +232,8 @@ const Annotator = ({
   }
 
   function handleSaveAnnotation() {
+    saveTriggeredRef.current = true;
     setEditMode(false);
-    onSave?.(metaData, canvasPaths);
   }
 
   function handleSelectedAction(actionType: ActionTypes) {
@@ -295,6 +294,13 @@ const Annotator = ({
     }),
     [metaData, curSelectedMetaDataId, selectedAction, canvasPaths]
   );
+
+  useEffect(() => {
+    if (!editMode && saveTriggeredRef.current) {
+      saveTriggeredRef.current = false;
+      onSave?.(metaData, canvasPaths);
+    }
+  }, [editMode]);
 
   return (
     <AnnotatorContext.Provider value={contextValue}>

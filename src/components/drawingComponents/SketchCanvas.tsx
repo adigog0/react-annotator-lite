@@ -147,7 +147,6 @@ const SketchCanvas = ({
       case "Pen":
         setSketchOptions("Pen");
         canvasRef.current?.eraseMode(false);
-        console.log("w value", value);
         if (typeof value === "number") {
           setStrokeWidth(value);
         }
@@ -172,7 +171,6 @@ const SketchCanvas = ({
         handleSetMainAction();
         break;
       case "Undo":
-        console.log("in undo");
         canvasRef.current?.undo();
         handleUndo();
         break;
@@ -279,7 +277,7 @@ const SketchCanvas = ({
     };
 
     const handleEndDraw = async () => {
-      console.log("draing end");
+      ("draing end");
       setIsDrawing(false);
       if (canvasRef.current && sketchOptions !== "Erase") {
         const paths = await canvasRef.current.exportPaths();
@@ -376,7 +374,6 @@ const SketchCanvas = ({
     };
   }, [isStrokeMenuOpen]);
 
-  console.log(canvasPath)
   return (
     <>
       <ReactSketchCanvas
@@ -396,7 +393,6 @@ const SketchCanvas = ({
         strokeWidth={strokeWidth}
         onStroke={async (path, isEraser) => {
           if (isEraser) {
-            console.log("erase path", isEraser);
             handleStrokeEnd(path.paths);
           }
         }}
