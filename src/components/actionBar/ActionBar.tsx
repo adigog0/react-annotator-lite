@@ -27,7 +27,7 @@ interface ActionToolbarProps {
   actionIcons?: Partial<Record<ActionTypes, React.ReactNode>>;
 }
 
-const ActionBar: React.FC<ActionToolbarProps> = ({ handleSelectedAction, className, actionIcons = {} }) => {
+const ActionBar: React.FC<ActionToolbarProps> = ({ handleSelectedAction, className, actionIcons }) => {
   //hook
   const { selectedAction, enableDrawing } = useAnnotatorContext();
   const screenSize = useScreenSize();
@@ -35,8 +35,8 @@ const ActionBar: React.FC<ActionToolbarProps> = ({ handleSelectedAction, classNa
   //consts
   const getIcon = (label: ActionTypes) => {
     // If user passed a custom icon, use it
-    if (actionIcons[label]) return actionIcons[label];
-    
+    if ( actionIcons && actionIcons[label]) return actionIcons[label];
+
     const iconClass = "cursor-pointer group-hover:fill-gray-800";
 
     // Else return default icon
@@ -44,27 +44,27 @@ const ActionBar: React.FC<ActionToolbarProps> = ({ handleSelectedAction, classNa
       case "Add comment":
         return <CommentIcon className={iconClass} />;
       case "Nearest tags":
-        return <NearestTagIcon className={iconClass}  />;
+        return <NearestTagIcon className={iconClass} />;
       case "Hide comments":
         return selectedAction === "Hide comments" ? (
-          <VisibilityOffIcon className={iconClass}  />
+          <VisibilityOffIcon className={iconClass} />
         ) : (
-          <VisibilityOnIcon className={iconClass}  />
+          <VisibilityOnIcon className={iconClass} />
         );
       case "Draw":
-        return <DrawIcon className={iconClass}  />;
+        return <DrawIcon className={iconClass} />;
       case "Save comments":
-        return <SaveIcon className={iconClass}  />;
+        return <SaveIcon className={iconClass} />;
       case "Hide Paths":
-        return <HidePathsIcon className={iconClass}  />;
+        return <HidePathsIcon className={iconClass} />;
       case "All comments":
-        return <ViewAllCommentsIcon className={iconClass}  />;
+        return <ViewAllCommentsIcon className={iconClass} />;
       default:
         return null;
     }
   };
 
-  const ActionArr: ActionTypes[] = [
+  const defaultActions: ActionTypes[] = [
     "All comments",
     "Add comment",
     ...(screenSize === "large" ? (["Nearest tags"] as ActionTypes[]) : []),
@@ -73,6 +73,10 @@ const ActionBar: React.FC<ActionToolbarProps> = ({ handleSelectedAction, classNa
     "Hide Paths",
     "Save comments",
   ];
+
+  // If user provided actionIcons → show only those actions, else show defaults
+  const ActionArr: ActionTypes[] =
+    actionIcons && Object.keys(actionIcons).length > 0 ? (Object.keys(actionIcons) as ActionTypes[]) : defaultActions;
 
   return (
     <div className={cn("flex gap-2", className)}>
