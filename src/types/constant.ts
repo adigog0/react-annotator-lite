@@ -1,5 +1,5 @@
 import { type CanvasPath } from "react-sketch-canvas";
-import { UserCanvasPath } from "../components/drawingComponents/SketchCanvas";
+import { SketchActions, UserCanvasPath } from "../components/drawingComponents/SketchCanvas";
 
 export type ActionTypes =
   | "Add comment"
@@ -60,7 +60,15 @@ export interface AnnotatorProps {
   currentUserData: CurUserData;
   onSave?: (annotations?: MetaData[], paths?: UserCanvasPath[]) => void;
   renderPathTooltip?: (index: number, user: CurUserData) => React.ReactNode;
-
+  drawToolbarOptions?: {
+    topToolbarIcons?: Partial<Record<SketchActions, React.ReactNode>> | undefined;
+    strokeIcons?: {
+      colorPickerIcon?: React.ReactNode;
+      eraserIcon?: React.ReactNode;
+      strokeWidthIcons?: Record<number, React.ReactNode>;
+    };
+    topToolbarStyle?: React.CSSProperties;
+  };
   imageContainerStyle?: React.CSSProperties;
   mainContainerStyle?: React.CSSProperties;
   maxWidth?: number;

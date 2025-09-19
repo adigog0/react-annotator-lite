@@ -12,9 +12,9 @@ interface BottomCommentMenuProps {
   subComments: MetaData[];
   allowCloseOnOverlayClick?: boolean;
   doneButtonLabel?: string;
-  menuClassName?: string;
+  bottomMenuClassName?: string;
   overlayClassName?: string;
-  renderCustomComments?: React.ReactNode;
+  renderCustomCommentList?: React.ReactNode;
 }
 
 const BottomMetaDataMenu = ({
@@ -24,9 +24,9 @@ const BottomMetaDataMenu = ({
   subComments,
   allowCloseOnOverlayClick = true,
   doneButtonLabel = "Done",
-  menuClassName,
+  bottomMenuClassName,
   overlayClassName,
-  renderCustomComments,
+  renderCustomCommentList,
 }: BottomCommentMenuProps) => {
   //states
   const [comment, setComment] = useState("");
@@ -53,7 +53,7 @@ const BottomMetaDataMenu = ({
           <div
             className={cn(
               "fixed left-0 right-0 p-4 bg-white shadow-lg rounded-t-xl z-[1001] transition-all duration-300",
-              menuClassName
+              bottomMenuClassName
             )}
             style={{ bottom: isOpen ? 0 : "-50vh" }}
           >
@@ -66,8 +66,8 @@ const BottomMetaDataMenu = ({
             </div>
 
             {/* Render external comment list if passed */}
-            {renderCustomComments ? (
-              renderCustomComments
+            {renderCustomCommentList ? (
+              renderCustomCommentList
             ) : curSelectedMetaDataId ? (
               <MetaDataListDisplay comments={subComments} />
             ) : (

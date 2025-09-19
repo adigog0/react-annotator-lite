@@ -43,6 +43,7 @@ const Annotator = ({
   renderPathTooltip,
   mainContainerStyle,
   editIconStyle,
+  drawToolbarOptions,
 }: AnnotatorProps) => {
   //states
   const [metaData, setMetaData] = useState<MetaData[]>(initial_Annotations);
@@ -363,6 +364,7 @@ const Annotator = ({
               drawingOptions={drawingOptions}
               handleSetMainAction={handleSetMainAction}
               inDrawMode={selectedAction === "Draw" && enableDrawing}
+              drawToolbarOptions={drawToolbarOptions}
             />
 
             {selectedAction !== "Draw" && enableDrawing && canvasPaths?.length > 0 && (
@@ -397,7 +399,7 @@ const Annotator = ({
               handleCloseMenu={() => setOpenBottomMenu(false)}
               handleAddMetadata={handleAddComment}
               subComments={subComments}
-              menuClassName="max-w-md mx-auto"
+              bottomMenuClassName="max-w-md mx-auto"
               doneButtonLabel="Done"
             />
           </div>

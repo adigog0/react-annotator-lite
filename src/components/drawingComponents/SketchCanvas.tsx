@@ -15,7 +15,7 @@ import { useAnnotatorContext } from "../../context/AnnotatorContext";
 import type { CurUserData } from "../../types/constant";
 import ColorPickerButton from "./ColorPickerButton";
 
-export type SketchActions = "Redo" | "Undo" | "Cancel" | "Done";
+export type SketchActions = "Redo" | "Undo" | "Done";
 export type SketchOptions = "Erase" | "Pen" | "pick color";
 export type UserCanvasPath = CanvasPath & {
   user: CurUserData;
@@ -34,7 +34,7 @@ interface SketchCanvasProps {
   sketchCanvasStyle?: React.CSSProperties;
   onDrawStart?: () => void;
   onDrawEnd?: () => void;
-  toolbarOptions?: {
+  drawToolbarOptions?: {
     topToolbarIcons?: Partial<Record<SketchActions, React.ReactNode>>;
     strokeIcons?: {
       colorPickerIcon?: React.ReactNode;
@@ -42,7 +42,6 @@ interface SketchCanvasProps {
       strokeWidthIcons?: Record<number, React.ReactNode>;
     };
     topToolbarStyle?: React.CSSProperties;
-    bottomToolbarStyle?: React.CSSProperties;
   };
 }
 
@@ -56,7 +55,7 @@ const SketchCanvas = ({
   sketchCanvasStyle,
   onDrawStart,
   onDrawEnd,
-  toolbarOptions,
+ drawToolbarOptions
 }: SketchCanvasProps) => {
   //states
   const [isDrawing, setIsDrawing] = useState(false);
@@ -88,10 +87,9 @@ const SketchCanvas = ({
   );
 
   const sketchActions: { label: SketchActions; icon: React.ReactNode }[] = [
-    // { label: "Cancel", icon: toolbarOptions?.topToolbarIcons?.Cancel ?? <CancelIcon fill="white" /> },
-    { label: "Redo", icon: toolbarOptions?.topToolbarIcons?.Redo ?? <RedoIcon fill="white" /> },
-    { label: "Undo", icon: toolbarOptions?.topToolbarIcons?.Undo ?? <UndoIcon fill="white" /> },
-    { label: "Done", icon: toolbarOptions?.topToolbarIcons?.Done ?? <DoneIcon fill="white" /> },
+    { label: "Redo", icon: drawToolbarOptions?.topToolbarIcons?.Redo ?? <RedoIcon fill="white" /> },
+    { label: "Undo", icon: drawToolbarOptions?.topToolbarIcons?.Undo ?? <UndoIcon fill="white" /> },
+    { label: "Done", icon: drawToolbarOptions?.topToolbarIcons?.Done ?? <DoneIcon fill="white" /> },
   ];
 
   //methods
@@ -166,9 +164,6 @@ const SketchCanvas = ({
           setSketchOptions("Pen");
           canvasRef.current?.eraseMode(false);
         }
-        break;
-      case "Cancel":
-        handleSetMainAction();
         break;
       case "Undo":
         canvasRef.current?.undo();
@@ -402,9 +397,9 @@ const SketchCanvas = ({
       {inDrawMode && !isDrawing && (
         <div
           className={cn(
-            "fixed md:absolute top-3 md:-top-25 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 p-2 backdrop-blur-md shadow-md rounded-xl",
-            toolbarOptions?.bottomToolbarStyle
+            "fixed md:absolute top-3 md:-top-25 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 p-2 backdrop-blur-md shadow-md rounded-xl"
           )}
+          style={drawToolbarOptions?.topToolbarStyle}
         >
           {/* Color Picker */}
           <ColorPickerButton onChange={(val) => handleDrawOptions("pick color", val)} strokeColor={strokeColor} />
@@ -418,7 +413,7 @@ const SketchCanvas = ({
                 sketchOptions === "Erase" ? "bg-blue-300" : "bg-gray-700"
               )}
             >
-              {toolbarOptions?.strokeIcons?.eraserIcon ?? <EraseIcon className="cursor-pointer fill-amber-50" />}
+              {drawToolbarOptions?.strokeIcons?.eraserIcon ?? <EraseIcon className="cursor-pointer fill-amber-50" />}
             </button>
           </Tooltip>
 
@@ -437,7 +432,7 @@ const SketchCanvas = ({
             </Tooltip>
             {isStrokeMenuOpen && (
               <div className="absolute top-full bg-gray-100 mt-1 left-1/2 -translate-x-1/2 border rounded-md shadow-md p-1 z-50 cursor-pointer">
-                {Object.entries(toolbarOptions?.strokeIcons?.strokeWidthIcons ?? defaultStrokeIcons).map(
+                {Object.entries(drawToolbarOptions?.strokeIcons?.strokeWidthIcons ?? defaultStrokeIcons).map(
                   ([w, icon]) => (
                     <button
                       key={w}
