@@ -27,7 +27,7 @@ const PathOverlay = ({
 }: PathOverlayProps) => {
   //states
   const [hoveredIndex, setHoveredIndex] = useState<{
-    index: number;
+    index: string;
     user: CurUserData;
   } | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
@@ -51,7 +51,7 @@ const PathOverlay = ({
           paths?.map((path, index) => {
             const denormPoints = path.paths.map(denormalize);
             const d = getPathD(denormPoints);
-            const isHovered = hoveredIndex?.index === index;
+            const isHovered = hoveredIndex?.index === path.pathId;
 
             const defaultStroke = isHovered ? "red" : path.strokeColor || "black";
             const defaultWidth = path.strokeWidth || 2;
@@ -62,7 +62,7 @@ const PathOverlay = ({
             return (
               path.drawMode && (
                 <path
-                  key={index}
+                  key={path.pathId}
                   d={d}
                   className={dynamicClass}
                   stroke={defaultStroke}
@@ -75,7 +75,7 @@ const PathOverlay = ({
                       setTooltipPos({ x: e.clientX - box.left, y: e.clientY - box.top });
                     }
                     setHoveredIndex({
-                      index: index,
+                      index: path.pathId,
                       user: path.user,
                     });
                   }}
@@ -95,7 +95,7 @@ const PathOverlay = ({
                     if (box) {
                       setTooltipPos({ x: e.clientX - box.left, y: e.clientY - box.top });
                       setHoveredIndex({
-                        index: index,
+                        index: path.pathId,
                         user: path.user,
                       });
                     }

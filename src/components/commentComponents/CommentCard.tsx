@@ -6,6 +6,7 @@ import { memo, useState } from "react";
 import type { MetaData } from "../../types/constant";
 import { useAnnotatorContext } from "../../context/AnnotatorContext";
 import { timeAgoFormat } from "../../utils/constants";
+import { getUserNameInitials } from "../../utils/getUserNameInitials";
 
 export type CommentOption = "Delete" | "Hide comments";
 export type CommentHandlerMap = {
@@ -77,11 +78,13 @@ const CommentCard = ({
         style={commentCardStyle}
       >
         <div className="flex gap-2.5">
-          <div className="bg-blue-400 text-white p-1 px-2.5 h-fit capitalize rounded-full">{created_by[0]}</div>
+          <div className="bg-blue-400 text-white p-1 px-2.5 h-fit capitalize rounded-full">
+            {getUserNameInitials(created_by.userName)}
+          </div>
 
           <div className="text-black overflow-hidden w-full">
             <div className="flex items-center">
-              <span className="text-[0.8rem] font-semibold mr-1">{created_by}</span>
+              <span className="text-[0.8rem] font-semibold mr-1">{created_by.userName}</span>
               <span className="text-[0.6rem] text-gray-400">{timeAgoFormat(created_at)}</span>
               <button
                 id={metadata_id}

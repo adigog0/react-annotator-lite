@@ -9,7 +9,7 @@ import Stroke2 from "../../assets/icons/stroke2.svg?react";
 import Stroke3 from "../../assets/icons/stroke3.svg?react";
 import Stroke4 from "../../assets/icons/stroke4.svg?react";
 import EraseIcon from "../../assets/icons/Eraser.svg?react";
-import { useDebounce, useDebounceFn } from "../../hooks/useDebounce";
+import { useDebounceFn } from "../../hooks/useDebounce";
 import Tooltip from "../tooltip/Tooltip";
 import { useAnnotatorContext } from "../../context/AnnotatorContext";
 import type { CurUserData } from "../../types/constant";
@@ -19,6 +19,7 @@ export type SketchActions = "Redo" | "Undo" | "Done";
 export type SketchOptions = "Erase" | "Pen" | "pick color";
 export type UserCanvasPath = CanvasPath & {
   user: CurUserData;
+  pathId: string;
 };
 
 interface SketchCanvasProps {
@@ -43,6 +44,7 @@ interface SketchCanvasProps {
     };
     topToolbarStyle?: React.CSSProperties;
   };
+  onDeletePaths?: (deletedPaths: string[]) => void;
 }
 
 const SketchCanvas = ({
@@ -55,7 +57,8 @@ const SketchCanvas = ({
   sketchCanvasStyle,
   onDrawStart,
   onDrawEnd,
- drawToolbarOptions
+  drawToolbarOptions,
+  onDeletePaths,
 }: SketchCanvasProps) => {
   //states
   const [isDrawing, setIsDrawing] = useState(false);
@@ -217,6 +220,7 @@ const SketchCanvas = ({
         strokeColor: p.strokeColor,
         strokeWidth: p.strokeWidth,
         user: currentUserData,
+        pathId: crypto.randomUUID(),
       }));
 
       handleUpdatePath(modifiedArr);
@@ -230,13 +234,25 @@ const SketchCanvas = ({
     const length = getStrokeLength(newStroke);
     if (length < 10) return;
 
+    // Find all paths that intersect with the eraser stroke
+    const deletedPaths = canvasPath.filter((existingPath) => isPathIntersecting(existingPath.paths, newStroke));
+
+    // Filter out those paths from canvasPath
     const updatedPaths = canvasPath.filter((existingPath) => !isPathIntersecting(existingPath.paths, newStroke));
 
-    if (updatedPaths.length !== canvasPath.length) {
+    if (deletedPaths.length > 0) {
+      // Get path IDs of deleted paths
+      const deletedPathIds = deletedPaths.map((p) => p.pathId);
+
+      console.log("Deleted Path IDs:", deletedPathIds);
+
+      onDeletePaths?.(deletedPathIds);
+
+      // 4️⃣ Update state and re-render canvas
       handleUpdatePath(updatedPaths);
       if (canvasRef.current) {
-        canvasRef.current.clearCanvas();
-        canvasRef.current.loadPaths(updatedPaths);
+        await canvasRef.current.clearCanvas();
+        await canvasRef.current.loadPaths(updatedPaths);
       }
     }
   };
@@ -284,6 +300,7 @@ const SketchCanvas = ({
           strokeColor: p.strokeColor,
           strokeWidth: p.strokeWidth,
           user: currentUserData,
+          pathId: crypto.randomUUID(),
         }));
         setHistory((prev) => [...prev, modifiedArr]);
         setRedoStack([]); // clear redo stack
@@ -391,7 +408,6 @@ const SketchCanvas = ({
             handleStrokeEnd(path.paths);
           }
         }}
- 
       />
 
       {inDrawMode && !isDrawing && (

@@ -27,7 +27,7 @@ export interface AnnotatorContextType {
   commentPillStyle?: React.CSSProperties;
   commentHoverMenuStyle?: React.CSSProperties;
   enableDrawing: boolean;
-  renderPathTooltip?: (index: number, user: CurUserData) => React.ReactNode;
+  renderPathTooltip?: (index: string, user: CurUserData) => React.ReactNode;
 }
 
 export const AnnotatorContext = createContext<AnnotatorContextType | null>(null);

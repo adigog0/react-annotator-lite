@@ -1,4 +1,3 @@
-import { type CanvasPath } from "react-sketch-canvas";
 import { SketchActions, UserCanvasPath } from "../components/drawingComponents/SketchCanvas";
 
 export type ActionTypes =
@@ -17,7 +16,7 @@ export interface MetaData {
   offsetx: number;
   offsety: number;
   created_at: Date | string;
-  created_by: string;
+  created_by: CurUserData;
   updated_at?: Date | string;
 }
 
@@ -32,8 +31,8 @@ export interface AnnotatorProps {
 
   // Commenting
   initial_Annotations?: MetaData[];
-  onCommentAdd?: (comment: MetaData) => void;
-  onReplyAdd?: (reply: MetaData, parentId: string) => void;
+  onAddComment?: (comment: MetaData) => void;
+  onAddReply?: (reply: MetaData, parentId: string) => void;
   commentPillStyle?: React.CSSProperties;
   commentHoverMenuStyle?: React.CSSProperties;
   commentSidebarStyle?: React.CSSProperties;
@@ -41,6 +40,8 @@ export interface AnnotatorProps {
   onDelete: (metadata_id: string) => void;
   commentItems?: React.ReactNode;
   disableAnnotationDragging?: boolean;
+  onPathUpdate?: (path: UserCanvasPath[]) => void;
+  onDeletePaths?:(deletedPaths:string[])=>void;
 
   // Toolbar
   actionIcons?: Partial<Record<ActionTypes, React.ReactNode>>;
@@ -59,7 +60,7 @@ export interface AnnotatorProps {
   sketchCanvasStyle?: React.CSSProperties;
   currentUserData: CurUserData;
   onSave?: (annotations?: MetaData[], paths?: UserCanvasPath[]) => void;
-  renderPathTooltip?: (index: number, user: CurUserData) => React.ReactNode;
+  renderPathTooltip?: (index: string, user: CurUserData) => React.ReactNode;
   drawToolbarOptions?: {
     topToolbarIcons?: Partial<Record<SketchActions, React.ReactNode>> | undefined;
     strokeIcons?: {

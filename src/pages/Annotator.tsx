@@ -21,8 +21,8 @@ const Annotator = ({
   image_url,
   initial_Annotations = [],
   initial_Paths = [],
-  onCommentAdd,
-  onReplyAdd,
+  onAddComment,
+  onAddReply,
   enableDrawing = true,
   drawingOptions,
   commentPillStyle,
@@ -44,6 +44,8 @@ const Annotator = ({
   mainContainerStyle,
   editIconStyle,
   drawToolbarOptions,
+  onPathUpdate,
+  onDeletePaths
 }: AnnotatorProps) => {
   //states
   const [metaData, setMetaData] = useState<MetaData[]>(initial_Annotations);
@@ -102,7 +104,10 @@ const Annotator = ({
           offsetx: offsetValue.x,
           offsety: offsetValue.y,
           created_at: new Date(),
-          created_by: currentUserData.userName || "Unknown",
+          created_by: {
+            userId: currentUserData.userId,
+            userName: currentUserData.userName,
+          },
         };
       } else {
         const curParentObj = metaData.find((v) => v.metadata_id === curSelectedMetaDataId);
@@ -114,14 +119,17 @@ const Annotator = ({
           offsetx: curParentObj.offsetx,
           offsety: curParentObj.offsety,
           created_at: new Date(),
-          created_by: currentUserData.userName || "Unknown",
+          created_by: {
+            userId: currentUserData.userId,
+            userName: currentUserData.userName,
+          },
         };
       }
       if (tmpObj) {
         setMetaData((prev) => [...prev, tmpObj!]);
         setOffsetValue(null);
-        if (type === "new") onCommentAdd?.(tmpObj);
-        else if (type === "sub") onReplyAdd?.(tmpObj, curSelectedMetaDataId!);
+        if (type === "new") onAddComment?.(tmpObj);
+        else if (type === "sub") onAddReply?.(tmpObj, curSelectedMetaDataId!);
       }
     },
     [offsetValue, curSelectedMetaDataId, metaData, currentUserData]
@@ -275,6 +283,7 @@ const Annotator = ({
 
   const handleUpdatePath = useCallback((path: UserCanvasPath[]) => {
     setCanvasPaths(path);
+    onPathUpdate?.(path);
   }, []);
 
   const contextValue = useMemo(
@@ -365,6 +374,7 @@ const Annotator = ({
               handleSetMainAction={handleSetMainAction}
               inDrawMode={selectedAction === "Draw" && enableDrawing}
               drawToolbarOptions={drawToolbarOptions}
+              onDeletePaths={onDeletePaths}
             />
 
             {selectedAction !== "Draw" && enableDrawing && canvasPaths?.length > 0 && (
