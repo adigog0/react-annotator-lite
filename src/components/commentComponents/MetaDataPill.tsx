@@ -11,6 +11,7 @@ import MetaDataInputBox from "./MetaDataInputBox";
 import CustomMenu from "../customMenu/CustomMenu";
 import useScreenSize from "../../hooks/useScreenSize";
 import { timeAgoFormat } from "../../utils/constants";
+import { getUserNameInitials } from "../../utils/getUserNameInitials";
 
 const ParentOptions = ["Delete", "Hide Comments"];
 
@@ -73,7 +74,7 @@ const MetaDataPill = ({ metadata, isSelected, comments = [], onReply }: UserComm
         )}
       >
         {/* Pill */}
-        <UserPill name={initial} style={commentPillStyle ?? {}} />
+        <UserPill name={getUserNameInitials(metadata.created_by.userName)} style={commentPillStyle ?? {}} />
 
         {/* Hover Info */}
         {curSelectedMetaDataId !== metadata.metadata_id && (
@@ -85,7 +86,7 @@ const MetaDataPill = ({ metadata, isSelected, comments = [], onReply }: UserComm
             style={commentHoverMenuStyle}
           >
             <div className="flex gap-5 justify-between">
-              <span className="text-[0.8rem] font-semibold">{metadata.created_by}</span>
+              <span className="text-[0.8rem] font-semibold">{metadata.created_by.userName}</span>
               <span className="text-[0.8rem] text-gray-400 break-normal">
                 {timeAgoFormat(metadata.created_at)}
               </span>
