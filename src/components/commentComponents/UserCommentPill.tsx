@@ -12,6 +12,7 @@ import { UserPill } from "./UserPill";
 import MetaDataInputBox from "./MetaDataInputBox";
 import useScreenSize from "../../hooks/useScreenSize";
 import { timeAgoFormat } from "../../utils/constants";
+import { getUserNameInitials } from "../../utils/getUserNameInitials";
 
 const ParentOptions = ["Delete", "Hide Comments"];
 
@@ -34,9 +35,6 @@ const UserCommentPill = ({ metadata, isSelected, comments = [], onReply }: UserC
   const endRef = useRef<HTMLDivElement | null>(null);
   const screenSize = useScreenSize();
   const isMobile = screenSize !== "large";
-
-  //const
-  const initial = metadata.created_by?.[0]?.toUpperCase() || "U";
 
   //methods
   function handleCloseParentOptionMenu() {
@@ -74,7 +72,7 @@ const UserCommentPill = ({ metadata, isSelected, comments = [], onReply }: UserC
         )}
       >
         {/* Pill */}
-        <UserPill name={initial} style={commentPillStyle ?? {}} />
+        <UserPill name={getUserNameInitials(metadata.created_by.userName)} style={commentPillStyle ?? {}} />
 
         {/* Hover Info */}
         {curSelectedMetaDataId !== metadata.metadata_id && (
@@ -86,7 +84,7 @@ const UserCommentPill = ({ metadata, isSelected, comments = [], onReply }: UserC
             style={commentHoverMenuStyle}
           >
             <div className="flex gap-5 justify-between">
-              <span className="text-[0.8rem] font-semibold">{metadata.created_by}</span>
+              <span className="text-[0.8rem] font-semibold">{metadata.created_by.userName}</span>
               <span className="text-[0.8rem] text-gray-400 break-normal">
                 {timeAgoFormat(metadata.created_at)}
               </span>
