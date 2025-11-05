@@ -248,7 +248,7 @@ const SketchCanvas = ({
 
       onDeletePaths?.(deletedPathIds);
 
-      // 4️⃣ Update state and re-render canvas
+      // Update state and re-render canvas
       handleUpdatePath(updatedPaths);
       if (canvasRef.current) {
         await canvasRef.current.clearCanvas();

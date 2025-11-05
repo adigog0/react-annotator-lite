@@ -1,6 +1,5 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { v4 as uuid } from "uuid";
-import type { CanvasPath } from "react-sketch-canvas";
 import type { ActionTypes, AnnotatorProps, MetaData } from "../types/constant";
 import { useResponsiveCanvasSize } from "../hooks/useResponsiveCanvasSize";
 import { cn } from "../lib/tailwind";
