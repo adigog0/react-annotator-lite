@@ -9,11 +9,11 @@ import Stroke2 from "../../assets/icons/stroke2.svg?react";
 import Stroke3 from "../../assets/icons/stroke3.svg?react";
 import Stroke4 from "../../assets/icons/stroke4.svg?react";
 import EraseIcon from "../../assets/icons/Eraser.svg?react";
-import { useDebounceFn } from "../../hooks/useDebounce";
 import Tooltip from "../tooltip/Tooltip";
 import { useAnnotatorContext } from "../../context/AnnotatorContext";
 import type { CurUserData } from "../../types/constant";
 import ColorPickerButton from "./ColorPickerButton";
+
 
 export type SketchActions = "Redo" | "Undo" | "Done";
 export type SketchOptions = "Erase" | "Pen" | "pick color";
@@ -68,14 +68,13 @@ const SketchCanvas = ({
   const [isStrokeMenuOpen, setIsStrokeMenuOpen] = useState(false);
   const [history, setHistory] = useState<UserCanvasPath[][]>([]);
   const [redoStack, setRedoStack] = useState<UserCanvasPath[][]>([]);
+  const [localCanvasPaths, setLocalCanvasPaths] = useState<UserCanvasPath[]>(canvasPath ?? []);
 
   //hooks
   const canvasRef = useRef<ReactSketchCanvasRef>(null);
   const strokeMenuRef = useRef<HTMLDivElement | null>(null);
   const pointerRef = useRef<SVGSVGElement | null>(null);
-  const debouncedUpdatePath = useDebounceFn((paths: UserCanvasPath[]) => {
-    handleUpdatePath(paths);
-  }, 1000);
+
   const { currentUserData } = useAnnotatorContext();
 
   //consts
@@ -107,11 +106,7 @@ const SketchCanvas = ({
   }
 
   /**
-   * Bounding box intersection check
-   * Checks if two paths intersect — but it does so approximately, by comparing their bounding rectangles instead of   their actual curves. (a quick heuristic)
-   * @param path1 - Array of points
-   * @param path2 - Array of points
-   * @returns boolean
+   * Bounding box intersection check (Unchanged)
    */
   function isPathIntersecting(path1: Point[], path2: Point[]): boolean {
     let xMin1 = Infinity,
@@ -162,7 +157,7 @@ const SketchCanvas = ({
   function handleSelectedAction(action: SketchActions) {
     switch (action) {
       case "Done":
-        exportPaths();
+        handleDone();
         if (sketchOptions === "Erase") {
           setSketchOptions("Pen");
           canvasRef.current?.eraseMode(false);
@@ -188,10 +183,8 @@ const SketchCanvas = ({
 
     setHistory(newHistory);
     setRedoStack(newRedoStack);
-    handleUpdatePath(lastState);
 
-    canvasRef.current?.clearCanvas();
-    canvasRef.current?.loadPaths(lastState);
+    setLocalCanvasPaths(lastState);
   }
 
   function handleRedo() {
@@ -203,53 +196,41 @@ const SketchCanvas = ({
 
     setHistory(newHistory);
     setRedoStack(newRedoStack);
-    handleUpdatePath(nextState);
 
-    canvasRef.current?.clearCanvas();
-    canvasRef.current?.loadPaths(nextState);
+    setLocalCanvasPaths(nextState);
   }
 
-  const exportPaths = async () => {
-    if (canvasRef.current) {
-      const paths = await canvasRef.current.exportPaths();
-      const modifiedArr: UserCanvasPath[] = paths.map((p) => ({
-        drawMode: p.drawMode,
-        endTimestamp: p.endTimestamp,
-        paths: p.paths,
-        startTimestamp: p.startTimestamp,
-        strokeColor: p.strokeColor,
-        strokeWidth: p.strokeWidth,
-        user: currentUserData,
-        pathId: crypto.randomUUID(),
-      }));
-
-      handleUpdatePath(modifiedArr);
-    }
+  /**
+   * Refactored Done handler: Triggers the debounced update using the current local state.
+   */
+  const handleDone = () => {
+    handleUpdatePath(localCanvasPaths);
     handleSetMainAction();
   };
 
+  /**
+   * Eraser stroke logic (Modified to update local state)
+   */
   const handleStrokeEnd = async (newStroke: Point[]) => {
-    if (!canvasPath || !newStroke?.length) return;
+    if (!localCanvasPaths || !newStroke?.length) return;
 
     const length = getStrokeLength(newStroke);
     if (length < 10) return;
 
-    // Find all paths that intersect with the eraser stroke
-    const deletedPaths = canvasPath.filter((existingPath) => isPathIntersecting(existingPath.paths, newStroke));
+    // Filter out paths that intersect with the eraser stroke
+    const updatedPaths = localCanvasPaths.filter((existingPath) => !isPathIntersecting(existingPath.paths, newStroke));
 
-    // Filter out those paths from canvasPath
-    const updatedPaths = canvasPath.filter((existingPath) => !isPathIntersecting(existingPath.paths, newStroke));
-
-    if (deletedPaths.length > 0) {
-      // Get path IDs of deleted paths
+    if (updatedPaths.length !== localCanvasPaths.length) {
+      const deletedPaths = localCanvasPaths.filter((p) => !updatedPaths.includes(p));
       const deletedPathIds = deletedPaths.map((p) => p.pathId);
-
-      console.log("Deleted Path IDs:", deletedPathIds);
-
       onDeletePaths?.(deletedPathIds);
 
-      // Update state and re-render canvas
-      handleUpdatePath(updatedPaths);
+      // Update local state and history
+      setLocalCanvasPaths(updatedPaths);
+      setHistory((prev) => [...prev, updatedPaths]);
+      setRedoStack([]);
+
+      // Clear and Load the canvas explicitly since we modify localCanvasPaths
       if (canvasRef.current) {
         await canvasRef.current.clearCanvas();
         await canvasRef.current.loadPaths(updatedPaths);
@@ -257,9 +238,11 @@ const SketchCanvas = ({
     }
   };
 
-  //Called on a pointer click. It checks if the click is near any path and deletes those.
+  /**
+   * Eraser click logic (Modified to update local state)
+   */
   const handlePathPointerUp = (e: PointerEvent) => {
-    if (sketchOptions !== "Erase" || !canvasPath?.length) return;
+    if (sketchOptions !== "Erase" || !localCanvasPaths?.length) return;
 
     const svg = document.getElementById("current_image") as SVGSVGElement | null;
     if (!svg) return;
@@ -269,88 +252,120 @@ const SketchCanvas = ({
       y: e.clientY - svg.getBoundingClientRect().top,
     };
 
-    const updatedPaths = canvasPath.filter((p) => !isPathIntersecting(p.paths, [point, point]));
+    const updatedPaths = localCanvasPaths.filter((p) => !isPathIntersecting(p.paths, [point, point]));
 
-    if (updatedPaths.length !== canvasPath.length) {
-      handleUpdatePath(updatedPaths);
+    if (updatedPaths.length !== localCanvasPaths.length) {
+      setLocalCanvasPaths(updatedPaths);
+      setHistory((prev) => [...prev, updatedPaths]); // Add eraser action to history
+      setRedoStack([]);
+
       canvasRef.current?.clearCanvas();
       canvasRef.current?.loadPaths(updatedPaths);
     }
   };
 
+  // --- USE EFFECTS ---
+
+  // Effect to initialize local state from external prop on mount/change
+  useEffect(() => {
+    setLocalCanvasPaths(canvasPath ?? []);
+  }, [canvasPath]);
+
+  /**
+   * When 'pointerup' (handleEndDraw) fires, it saves the Pen stroke.
+   */
   useEffect(() => {
     const svg = document.getElementById("current_image") as SVGSVGElement | null;
     if (!svg) return;
 
     const handleStartDraw = () => {
+      console.log("start drawing");
       setIsDrawing(true);
       onDrawStart?.();
     };
 
     const handleEndDraw = async () => {
-      ("draing end");
       setIsDrawing(false);
-      if (canvasRef.current && sketchOptions !== "Erase") {
-        const paths = await canvasRef.current.exportPaths();
-        const modifiedArr: UserCanvasPath[] = paths.map((p) => ({
-          drawMode: p.drawMode,
-          endTimestamp: p.endTimestamp,
-          paths: p.paths,
-          startTimestamp: p.startTimestamp,
-          strokeColor: p.strokeColor,
-          strokeWidth: p.strokeWidth,
-          user: currentUserData,
-          pathId: crypto.randomUUID(),
-        }));
-        setHistory((prev) => [...prev, modifiedArr]);
-        setRedoStack([]); // clear redo stack
-        debouncedUpdatePath(modifiedArr);
-      }
       onDrawEnd?.();
+
+      // Only process saving for the Pen tool when drawing ends (pointerup)
+      if (sketchOptions === "Pen" && canvasRef.current) {
+        const allPaths = await canvasRef.current.exportPaths();
+
+        const validNewStrokes = allPaths.slice(localCanvasPaths.length);
+
+        if (validNewStrokes.length > 0) {
+          const strokeToSave = validNewStrokes[validNewStrokes.length - 1];
+
+          const newCustomPath: UserCanvasPath = {
+            drawMode: strokeToSave.drawMode,
+            endTimestamp: strokeToSave.endTimestamp,
+            paths: strokeToSave.paths,
+            startTimestamp: strokeToSave.startTimestamp,
+            strokeColor: strokeToSave.strokeColor,
+            strokeWidth: strokeToSave.strokeWidth,
+            user: currentUserData,
+            pathId: crypto.randomUUID(),
+          };
+
+          const updatedPaths = [...localCanvasPaths, newCustomPath];
+
+          // 3. Update the local state and history.
+          setLocalCanvasPaths(updatedPaths);
+          // debouncedUpdatePath(updatedPaths);
+          setHistory((prev) => [...prev, updatedPaths]);
+          setRedoStack([]);
+
+          await canvasRef.current.clearCanvas();
+          await canvasRef.current.loadPaths(updatedPaths);
+        } else if (allPaths.length > localCanvasPaths.length) {
+          await canvasRef.current.clearCanvas();
+          await canvasRef.current.loadPaths(localCanvasPaths);
+        }
+      }
     };
 
-    const addListeners = () => {
-      svg.addEventListener("pointerdown", handleStartDraw);
-      svg.addEventListener("pointerup", handleEndDraw);
-      svg.querySelectorAll("path").forEach((path) => path.addEventListener("pointerup", handlePathPointerUp));
-    };
+    svg.addEventListener("pointerdown", handleStartDraw);
+    svg.addEventListener("pointerup", handleEndDraw);
 
-    const removeListeners = () => {
+    return () => {
       svg.removeEventListener("pointerdown", handleStartDraw);
       svg.removeEventListener("pointerup", handleEndDraw);
-      const paths = svg.querySelectorAll("path");
-      paths.forEach((path) => {
-        path.removeEventListener("pointerup", handlePathPointerUp); // ensure no duplicates
-      });
     };
+  }, [sketchOptions, localCanvasPaths, currentUserData, onDrawStart, onDrawEnd]); // Dependencies are correct
 
-    addListeners();
-    const observer = new MutationObserver(() => {
-      removeListeners();
-      addListeners();
-    });
-
-    observer.observe(svg, { childList: true, subtree: true });
-    return () => {
-      observer.disconnect();
-      removeListeners();
-    };
-  }, [canvasPath, sketchOptions]);
-
+  // Effect to synchronize the local state (localCanvasPaths) with the canvas. (Unchanged logic)
   useEffect(() => {
-    if (canvasPath && canvasPath.length && canvasRef.current && inDrawMode) {
-      canvasRef.current.loadPaths(canvasPath);
+    if (localCanvasPaths && localCanvasPaths.length && canvasRef.current && inDrawMode) {
+      const pathsToLoad = localCanvasPaths.map((p) => ({
+        drawMode: p.drawMode,
+        paths: p.paths,
+        strokeColor: p.strokeColor,
+        strokeWidth: p.strokeWidth,
+      }));
+      canvasRef.current.loadPaths(pathsToLoad);
     } else {
       canvasRef.current?.clearCanvas();
     }
-  }, [canvasPath, inDrawMode]);
+  }, [localCanvasPaths, inDrawMode]);
 
+  // Effect for eraser click-to-delete logic (Unchanged logic)
+  useEffect(() => {
+    const svg = document.getElementById("current_image") as SVGSVGElement | null;
+    if (!svg) return;
+
+    svg.addEventListener("pointerup", handlePathPointerUp);
+
+    return () => {
+      svg.removeEventListener("pointerup", handlePathPointerUp);
+    };
+  }, [sketchOptions, localCanvasPaths]);
+
+  // Effect for eraser mouse move visual (Unchanged)
   useEffect(() => {
     const canvas = document.getElementById("current_image");
     if (!canvas || sketchOptions !== "Erase") return;
-
     let frame: number | null = null;
-
     const throttledMove = (e: PointerEvent) => {
       if (frame) return;
       frame = requestAnimationFrame(() => {
@@ -361,26 +376,23 @@ const SketchCanvas = ({
         }
       });
     };
-
     canvas.addEventListener("pointermove", throttledMove);
-
     return () => {
       canvas.removeEventListener("pointermove", throttledMove);
       if (frame) cancelAnimationFrame(frame);
     };
   }, [sketchOptions]);
 
+  // Effect for closing the stroke menu when clicking outside (Unchanged)
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (strokeMenuRef.current && !strokeMenuRef.current.contains(event.target as Node)) {
         setIsStrokeMenuOpen(false);
       }
     }
-
     if (isStrokeMenuOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -403,9 +415,11 @@ const SketchCanvas = ({
         backgroundImage={image_url}
         strokeColor={strokeColor}
         strokeWidth={strokeWidth}
+        // Pen stroke logic is handled in handleEndDraw (on pointerup).
         onStroke={async (path, isEraser) => {
           if (isEraser) {
             handleStrokeEnd(path.paths);
+            return;
           }
         }}
       />
@@ -417,7 +431,7 @@ const SketchCanvas = ({
           )}
           style={drawToolbarOptions?.topToolbarStyle}
         >
-          {/* Color Picker */}
+          {/* ... Toolbar content (unchanged) ... */}
           <ColorPickerButton onChange={(val) => handleDrawOptions("pick color", val)} strokeColor={strokeColor} />
 
           {/* Eraser */}
