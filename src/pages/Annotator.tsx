@@ -44,7 +44,7 @@ const Annotator = ({
   editIconStyle,
   drawToolbarOptions,
   onPathUpdate,
-  onDeletePaths
+  onDeletePaths,
 }: AnnotatorProps) => {
   //states
   const [metaData, setMetaData] = useState<MetaData[]>(initial_Annotations);
@@ -53,9 +53,10 @@ const Annotator = ({
   const [curSelectedMetaDataId, setCurSelectedMetaDataId] = useState<string | null>(null);
   const [offsetValue, setOffsetValue] = useState<{ x: number; y: number; value: string } | null>(null);
   const [openBottomMenu, setOpenBottomMenu] = useState(false);
-  const [editMode, setEditMode] = useState(
-    initial_Annotations.length > 0 || initial_Paths.length > 0 ? false : true
-  );
+
+  const hasExistingAnnotation = initial_Annotations.length > 0 || initial_Paths.length > 0;
+
+  const [editMode, setEditMode] = useState(!hasExistingAnnotation);
 
   //const
   const { maxWidth: defaultWidth, maxHeight: defaultHeight } = getResponsiveDefaults();
@@ -341,19 +342,20 @@ const Annotator = ({
             <ActionBar handleSelectedAction={handleSelectedAction} actionIcons={actionIcons} />
           </div>
         ) : selectedAction === "Draw" ? null : (
-          <div
-            className={cn(
-              "absolute top-5 right-10 -translate-x-1/2 z-20 backdrop-blur-md shadow-md py-1 px-2 rounded-md text-white cursor-pointer"
-            )}
-            style={editIconStyle}
-            onClick={() => setEditMode(true)}
-          >
-            <Tooltip title="Edit Annotation" position="left">
-              <EditAnnotationIcon />
-            </Tooltip>
-          </div>
+          hasExistingAnnotation && (
+            <div
+              className={cn(
+                "absolute top-5 right-10 -translate-x-1/2 z-20 backdrop-blur-md shadow-md py-1 px-2 rounded-md text-white cursor-pointer"
+              )}
+              style={editIconStyle}
+              onClick={() => setEditMode(true)}
+            >
+              <Tooltip title="Edit Annotation" position="left">
+                <EditAnnotationIcon />
+              </Tooltip>
+            </div>
+          )
         )}
-
         {/* Image Container */}
         <div className="flex flex-1 flex-col justify-center items-center">
           <div
