@@ -54,7 +54,7 @@ const Annotator = ({
   const [offsetValue, setOffsetValue] = useState<{ x: number; y: number; value: string } | null>(null);
   const [openBottomMenu, setOpenBottomMenu] = useState(false);
   const [editMode, setEditMode] = useState(
-    initial_Annotations.length !== 0 || initial_Paths.length !== 0 ? false : true
+    initial_Annotations.length > 0 || initial_Paths.length > 0 ? false : true
   );
 
   //const
