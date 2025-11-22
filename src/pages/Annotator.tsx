@@ -316,6 +316,22 @@ const Annotator = ({
     }
   }, [editMode]);
 
+  useEffect(() => {
+    setMetaData((prevMetaData) => {
+      const propAnnotationIds = new Set(initial_Annotations.map((a) => a.metadata_id));
+
+      const localOnlyAnnotations = prevMetaData.filter((a) => !propAnnotationIds.has(a.metadata_id));
+      return [...initial_Annotations, ...localOnlyAnnotations];
+    });
+
+    setCanvasPaths((prevCanvasPaths) => {
+      const propPathIds = new Set(initial_Paths.map((p) => p.pathId));
+
+      const localOnlyPaths = prevCanvasPaths.filter((p) => !propPathIds.has(p.pathId));
+      return [...initial_Paths, ...localOnlyPaths];
+    });
+  }, [initial_Annotations, initial_Paths, metaData, canvasPaths]);
+
   return (
     <AnnotatorContext.Provider value={contextValue}>
       <div className="h-dvh flex flex-row relative  bg-[rgba(0,0,0,0.7)] w-screen" style={mainContainerStyle}>
